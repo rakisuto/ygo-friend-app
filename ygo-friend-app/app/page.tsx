@@ -7,10 +7,12 @@ function CardTable({
   title,
   data,
   color,
+  iconPath,
 }: {
   title: string;
   data: Record<string, { name: string; url?: string }[]>;
   color: string;
+  iconPath?: string;
 }) {
   const maxRows = Math.max(
     data.monster.length,
@@ -30,9 +32,14 @@ function CardTable({
     );
   };
 
-  return (
+return (
     <section className="mb-12">
-      <h2 className={`text-2xl font-semibold mb-4 ${color}`}>{title}</h2>
+      <div className="flex items-center mb-4">
+        <h2 className={`text-2xl font-semibold mr-2 ${color}`}>{title}</h2>
+        {iconPath && (
+          <img src={iconPath} alt={`${title}アイコン`} className="w-6 h-6" />
+        )}
+      </div>
       <table className="w-full border border-gray-300 text-left">
         <thead className="bg-gray-100">
           <tr>
@@ -62,9 +69,9 @@ export default function Page() {
     <main className="p-6 space-y-12">
       <h1 className="text-3xl font-bold">リミットレギュレーション一覧</h1>
 
-      <CardTable title="禁止カード" data={forbidden} color="text-red-600" />
-      <CardTable title="制限カード" data={limited} color="text-yellow-600" />
-      <CardTable title="準制限カード" data={semiLimited} color="text-blue-600" />
+      <CardTable title="禁止カード" data={forbidden} color="text-red-600" iconPath="/img/forbidden.png" />
+      <CardTable title="制限カード" data={limited} color="text-yellow-600" iconPath="/img/limited.png"  />
+      <CardTable title="準制限カード" data={semiLimited} color="text-blue-600" iconPath="/img/semi_limited.png" />
     </main>
   );
 }
