@@ -4,7 +4,8 @@
       "name": "オーロラ・アンギラス",
       "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=9507&request_locale=ja"
     },
-        { "name": "堕天使ナース－レフィキュル", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=7352&request_locale=ja" }
+        { "name": "堕天使ナース－レフィキュル", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=7352&request_locale=ja" },
+    { "name": "時械神ミチオン", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=13815&request_locale=ja" }
   ],
   "spell": [
     {"name": "次元の裂け目", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=6707&request_locale=ja"},
