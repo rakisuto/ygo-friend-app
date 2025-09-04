@@ -24,16 +24,36 @@ export default function CardTable({
     data.extra.length
   );
 
-  const renderCell = (card?: { name: string; url?: string }) => {
-    if (!card) return "";
-    return card.url ? (
-      <a href={card.url} target="_blank" rel="noopener noreferrer" style={{ color: "blue", textDecoration: "underline" }}>
-        {card.name}
-      </a>
-    ) : (
-      card.name
+const renderCell = (
+  value: string | { name: string; url?: string } | undefined
+) => {
+  if (!value) return null;
+
+  if (typeof value === "string") {
+    return (
+      <span className="text-blue-600 visited:text-purple-600 underline transition transform active:scale-95">
+        {value}
+      </span>
     );
-  };
+  }
+
+  return value.url ? (
+    <a
+      href={value.url}
+      className="text-blue-600 visited:text-purple-600 underline transition transform active:scale-95"
+      target="_blank" // optional: open in new tab
+      rel="noopener noreferrer"
+    >
+      {value.name}
+    </a>
+  ) : (
+    <span className="text-blue-600 visited:text-purple-600 underline transition transform active:scale-95">
+      {value.name}
+    </span>
+  );
+};
+
+
 
   return (
     <section style={{ marginBottom: "3rem" }}>
@@ -75,7 +95,7 @@ export default function CardTable({
       <td
         className="gothic text-lg p-3 leading-normal min-h-[48px] border"
         style={{
-          backgroundColor: data.spell[i] ? "#e6f7ff" : "white",
+          backgroundColor: data.spell[i] ? "#dfd" : "white",
         }}
       >
         {renderCell(data.spell[i])}
@@ -91,7 +111,7 @@ export default function CardTable({
       <td
         className="gothic text-lg p-3 leading-normal min-h-[48px] border"
         style={{
-          backgroundColor: data.extra[i] ? "#e6ffe6" : "white",
+          backgroundColor: data.extra[i] ? "#def" : "white",
         }}
       >
         {renderCell(data.extra[i])}
