@@ -1,4 +1,8 @@
 @import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 
 :root {
   --background: #ffffff;
@@ -19,8 +23,56 @@
   }
 }
 
+@font-face {
+  font-family: 'HOTReisho';
+  src: url('/fonts/HOT-ReishoRkk-R.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'BIZUDGothic';
+  src: url('/fonts/BIZUDGothic-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+
+.reisho {
+  font-family: 'HOTReisho', serif;
+}
+
+.gothic {
+  font-family: 'BIZUDGothic', sans-serif;
+}
+
+
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+th.monster {
+  background-color: rgb(255, 253, 221);
+  color: #c00;
+}
+th.spell {
+  background-color: #dfd;
+  color: #080;
+}
+th.trap {
+  background-color: rgb(205, 187, 211);
+  color: rgb(243, 13, 231);
+}
+th.extra {
+  background-color: #def;
+  color: #00a;
+}
+
+/* 枠線はそのまま */
+table, th, td {
+  border: 1px solid black;
+  border-collapse: collapse;
+}
+
