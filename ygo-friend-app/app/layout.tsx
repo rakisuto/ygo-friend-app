@@ -7,8 +7,8 @@ import { Inter } from 'next/font/google';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata = {
-  title: 'ygo-friend-app',
-  description: 'ローカルアプリ',
+  title: 'リミットレギュレーション一覧',
+  description: 'マスターデュエルのローカルリミットレギュレーション一覧を表示するアプリです。',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
