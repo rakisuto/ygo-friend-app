@@ -44,7 +44,7 @@ export default function CardTable({
         {iconPath && <img src={iconPath} alt={`${title}アイコン`} style={{ width: "1.5rem", height: "1.5rem" }} />}
       </div>
       {isOpen && (
-        <table
+        <table className="w-full text-sm table-fixed bg-white"
         style={{
             width: "100%",
             borderCollapse: "collapse",
@@ -61,36 +61,45 @@ export default function CardTable({
             <th className="extra border p-2">EX</th>
         </tr>
           </thead>
-        <tbody>
-        {Array.from({ length: maxRows }).map((_, i) => (
-            <tr key={i}>
-            <td
-                className={data.monster[i] ? "border p-2 gothic" : "p-2"}
-                style={data.monster[i] ? { backgroundColor: "#fffbe6" } : {}}
-            >
-                {renderCell(data.monster[i])}
-            </td>
-            <td
-                className={data.spell[i] ? "border p-2 gothic" : "p-2"}
-                style={data.spell[i] ? { backgroundColor: "#e6f7ff" } : {}}
-            >
-                {renderCell(data.spell[i])}
-            </td>
-            <td
-                className={data.trap[i] ? "border p-2 gothic" : "p-2"}
-                style={data.trap[i] ? { backgroundColor: "#f9e6ff" } : {}}
-            >
-                {renderCell(data.trap[i])}
-            </td>
-            <td
-                className={data.extra[i] ? "border p-2 gothic" : "p-2"}
-                style={data.extra[i] ? { backgroundColor: "#e6ffe6" } : {}}
-            >
-                {renderCell(data.extra[i])}
-            </td>
-            </tr>
-        ))}
-        </tbody>
+<tbody>
+  {Array.from({ length: maxRows }).map((_, i) => (
+    <tr key={i}>
+      <td
+        className="gothic text-lg p-3 leading-normal min-h-[48px] border"
+        style={{
+          backgroundColor: data.monster[i] ? "#fffbe6" : "white",
+        }}
+      >
+        {renderCell(data.monster[i])}
+      </td>
+      <td
+        className="gothic text-lg p-3 leading-normal min-h-[48px] border"
+        style={{
+          backgroundColor: data.spell[i] ? "#e6f7ff" : "white",
+        }}
+      >
+        {renderCell(data.spell[i])}
+      </td>
+      <td
+        className="gothic text-lg p-3 leading-normal min-h-[48px] border"
+        style={{
+          backgroundColor: data.trap[i] ? "#f9e6ff" : "white",
+        }}
+      >
+        {renderCell(data.trap[i])}
+      </td>
+      <td
+        className="gothic text-lg p-3 leading-normal min-h-[48px] border"
+        style={{
+          backgroundColor: data.extra[i] ? "#e6ffe6" : "white",
+        }}
+      >
+        {renderCell(data.extra[i])}
+      </td>
+    </tr>
+  ))}
+</tbody>
+
 
         </table>
       )}
