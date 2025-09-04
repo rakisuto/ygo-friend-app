@@ -12,9 +12,9 @@
     "@emotion/styled": "^11.14.1",
     "@vercel/kv": "^3.0.0",
     "html-to-image": "^1.11.13",
-    "next": "15.4.6",
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
+    "next": "14.1.4",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
     "uuid": "^11.1.0"
   },
   "devDependencies": {
