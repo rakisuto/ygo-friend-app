@@ -1,22 +1,38 @@
 {
   "monster": [
     { "name": "インフェルノイド・デカトロン", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=11823&request_locale=ja" },
-    { "name": "堕天使ナース－レフィキュル", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=7352&request_locale=ja" },
     { "name": "ナイト・ドラゴリッチ", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=11366&request_locale=ja" },
     { "name": "星遺物－『星盾』", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=13391&request_locale=ja" },
     { "name": "花札衛－萩に猪－", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=12602&request_locale=ja" },
     { "name": "メガリス・フール", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=15270&request_locale=ja" },
-    { "name": "メガリス・ベトール", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=14848&request_locale=ja" }
+    { "name": "メガリス・ベトール", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=14848&request_locale=ja" },
+    { "name": "虚の王 ウートガルザ", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=14831&request_locale=ja" },
+    { "name": "王の呪 ヴァラ", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=18165&request_locale=ja" },
+    { "name": "D・テレホン", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=17596&request_locale=ja" },
+    { "name": "惑星探査車", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=10232&request_locale=ja" },
+    { "name": "時械神カミオン", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=13160&request_locale=ja" },
+    { "name": "時械神ガブリオン", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=13818&request_locale=ja" },
+    { "name": "時械神サンダイオン", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=13819&request_locale=ja" },
+    { "name": "時械神メタイオン", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=9698&request_locale=ja" },
+    { "name": "時械神サディオン", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=13519&request_locale=ja" },
+    { "name": "時械神ハイロン", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=13816&request_locale=ja" },
+    { "name": "時械神ザフィオン", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=13158&request_locale=ja" },
+    { "name": "時械神ラツィオン", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=13157&request_locale=ja" },
+    { "name": "時械神ラフィオン", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=13817&request_locale=ja" },
+    { "name": "アリジバク", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=13251&request_locale=ja" },
+    { "name": "ジャイアントウィルス", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=4921&request_locale=ja" },
+    { "name": "機械犬マロン", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=6249&request_locale=ja" }
   ],
   "spell": [
-    { "name": "魔力の枷", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=4908&request_locale=ja" },
     { "name": "ライフハック", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=19937&request_locale=ja" }
   ],
   "trap": [
     { "name": "激流葬", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=5114&request_locale=ja" },
-    { "name": "迷い風", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=12803&request_locale=ja" },
-    { "name": "シモッチによる副作用", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=4694&request_locale=ja" },
-    { "name": "死霊の誘い", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=4961&request_locale=ja" }
+    { "name": "破壊輪", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=5005&request_locale=ja" },
+    { "name": "火霊術－「紅」", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=6441&request_locale=ja" },
+    { "name": "仕込み爆弾", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=11662&request_locale=ja" },
+    { "name": "仕込みマシンガン", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=5620&request_locale=ja" }
+
   ],
   "extra": []
 }
