@@ -1,15 +1,18 @@
 {
   "monster": [
     { "name": "戦華の智－諸葛孔", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=15009&request_locale=ja" },
+    { "name": "戦華の義－関雲", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=14821&request_locale=ja" },  
     { "name": "クシャトリラ・オーガ", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=17770&request_locale=ja" },
-    { "name": "真竜戦士イグニスH", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=12935&request_locale=ja" }
+    { "name": "真竜戦士イグニスH", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=12935&request_locale=ja" },
+    { "name": "虚の王 ウートガルザ", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=14831&request_locale=ja" },
+    { "name": "魔神童", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=13738&request_locale=ja" }
   ],
   "spell": [
     { "name": "Ai打ち", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=14860&request_locale=ja" }
   ],
   "trap": [
-    { "name": "迷い風", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=12803&request_locale=ja" },
-    { "name": "真竜の黙示録", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=12984&request_locale=ja" }
+    { "name": "真竜の黙示録", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=12984&request_locale=ja" },
+    { "name": "フェアーウェルカム・ラビュリンス", "url": "https://www.db.yugioh-card.com/yugiohdb/card_search.action?ope=2&cid=17370&request_locale=ja" }
   ],
   "extra": []
 }
