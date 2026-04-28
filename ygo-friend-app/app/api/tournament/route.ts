@@ -14,7 +14,11 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  if (req.headers.get('x-admin-pin') !== process.env.ADMIN_PIN) {
+  const adminPin = process.env.ADMIN_PIN;
+  if (!adminPin) {
+    return NextResponse.json({ error: 'ADMIN_PIN is not configured on the server' }, { status: 500 });
+  }
+  if (req.headers.get('x-admin-pin') !== adminPin) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   try {
