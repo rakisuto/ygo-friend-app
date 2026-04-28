@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import type { Match, Player, Session } from '../types';
+import { DECK_THEMES } from '@/data/deckThemes';
 
 interface Props {
   session: Session;
@@ -25,6 +26,8 @@ export default function MatchTable({ session, players, isAdmin, onSave }: Props)
   const [saved, setSaved] = useState(false);
 
   const playerMap = Object.fromEntries(players.map(p => [p.id, p.name]));
+  // datalist は session ごとに一意な id を使う
+  const datalistId = `deck-themes-${session.id}`;
 
   const update = (index: number, field: keyof Match, value: string | null) => {
     setEdited(prev =>
@@ -46,6 +49,15 @@ export default function MatchTable({ session, players, isAdmin, onSave }: Props)
 
   return (
     <div>
+      {/* デッキテーマ予測変換用 datalist */}
+      {isAdmin && (
+        <datalist id={datalistId}>
+          {DECK_THEMES.map(theme => (
+            <option key={theme} value={theme} />
+          ))}
+        </datalist>
+      )}
+
       <div style={{ overflowX: 'auto', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }} className="gothic">
           <thead>
@@ -55,7 +67,7 @@ export default function MatchTable({ session, players, isAdmin, onSave }: Props)
               <th style={{ ...COL.firstDeckH, minWidth: '130px' }}>先攻デッキ</th>
               <th style={COL.secondHeader}>後攻</th>
               <th style={{ ...COL.secondDeckH, minWidth: '130px' }}>後攻デッキ</th>
-              <th style={{ ...COL.winnerHeader, minWidth: '90px' }}>勝者</th>
+              <th style={{ ...COL.winnerHeader, minWidth: '120px' }}>勝者</th>
             </tr>
           </thead>
           <tbody>
@@ -74,6 +86,7 @@ export default function MatchTable({ session, players, isAdmin, onSave }: Props)
                     padding: '8px 10px', textAlign: 'center', fontWeight: 600,
                     background: '#eff6ff', color: firstWon ? '#d97706' : '#1d4ed8',
                     borderRight: '1px solid #dbeafe',
+                    whiteSpace: 'nowrap',
                   }}>
                     {firstWon && '🏆 '}{playerMap[match.firstPlayerId]}
                   </td>
@@ -82,10 +95,12 @@ export default function MatchTable({ session, players, isAdmin, onSave }: Props)
                   <td style={{ padding: '6px 8px', borderRight: '1px solid #f1f5f9' }}>
                     {isAdmin ? (
                       <input
+                        list={datalistId}
                         style={{ width: '100%', border: '1px solid #e2e8f0', borderRadius: '4px', padding: '4px 6px', fontSize: '0.875rem', background: '#fff', color: '#1e293b' }}
                         value={match.firstPlayerDeck ?? ''}
                         onChange={e => update(i, 'firstPlayerDeck', e.target.value)}
                         placeholder="デッキテーマ"
+                        autoComplete="off"
                       />
                     ) : (
                       <span style={{ color: match.firstPlayerDeck ? '#475569' : '#cbd5e1' }}>
@@ -99,6 +114,7 @@ export default function MatchTable({ session, players, isAdmin, onSave }: Props)
                     padding: '8px 10px', textAlign: 'center', fontWeight: 600,
                     background: '#fff1f2', color: secondWon ? '#d97706' : '#b91c1c',
                     borderRight: '1px solid #fee2e2',
+                    whiteSpace: 'nowrap',
                   }}>
                     {secondWon && '🏆 '}{playerMap[match.secondPlayerId]}
                   </td>
@@ -107,10 +123,12 @@ export default function MatchTable({ session, players, isAdmin, onSave }: Props)
                   <td style={{ padding: '6px 8px', borderRight: '1px solid #f1f5f9' }}>
                     {isAdmin ? (
                       <input
+                        list={datalistId}
                         style={{ width: '100%', border: '1px solid #e2e8f0', borderRadius: '4px', padding: '4px 6px', fontSize: '0.875rem', background: '#fff', color: '#1e293b' }}
                         value={match.secondPlayerDeck ?? ''}
                         onChange={e => update(i, 'secondPlayerDeck', e.target.value)}
                         placeholder="デッキテーマ"
+                        autoComplete="off"
                       />
                     ) : (
                       <span style={{ color: match.secondPlayerDeck ? '#475569' : '#cbd5e1' }}>
@@ -123,7 +141,11 @@ export default function MatchTable({ session, players, isAdmin, onSave }: Props)
                   <td style={{ padding: '6px 8px', textAlign: 'center' }}>
                     {isAdmin ? (
                       <select
-                        style={{ width: '100%', border: '1px solid #e2e8f0', borderRadius: '4px', padding: '4px 6px', fontSize: '0.875rem', background: '#fff', color: '#1e293b' }}
+                        style={{
+                          width: '100%', border: '1px solid #e2e8f0', borderRadius: '4px',
+                          padding: '4px 4px', fontSize: '0.875rem', background: '#fff', color: '#1e293b',
+                          minWidth: '110px',
+                        }}
                         value={match.winnerId ?? ''}
                         onChange={e => update(i, 'winnerId', e.target.value)}
                       >
