@@ -1,6 +1,6 @@
 import Navbar from '@/app/components/Navbar';
 
-export default function TournamentLayout({ children }: { children: React.ReactNode }) {
+export default function StatsLayout({ children }: { children: React.ReactNode }) {
   return (
     <div
       style={{

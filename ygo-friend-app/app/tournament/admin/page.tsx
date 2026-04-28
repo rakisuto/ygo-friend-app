@@ -7,33 +7,32 @@ import SessionTabs from '../components/SessionTabs';
 
 type Mode = 'view' | 'generate';
 
-function DateInput({
-  value,
-  label,
-  onChange,
-}: {
-  value: string;
-  label: string;
-  onChange: (v: string) => void;
-}) {
+// ── DateInput sub-component ──────────────────────────────────────────────────
+function DateInput({ value, label, onChange }: { value: string; label: string; onChange: (v: string) => void }) {
   const ref = useRef<HTMLInputElement>(null);
   return (
-    <div className="flex items-center gap-3">
-      <span className="text-sm text-gray-500 w-10">{label}</span>
-      <div className="flex items-center border border-gray-300 rounded focus-within:border-blue-400">
+    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+      <span style={{ fontSize: '0.8125rem', color: '#64748b', width: '36px', flexShrink: 0 }}>{label}</span>
+      <div
+        style={{
+          display: 'flex', alignItems: 'center',
+          border: '1px solid #d1d5db', borderRadius: '8px',
+          background: '#fff', overflow: 'hidden',
+        }}
+      >
         <input
           ref={ref}
           type="date"
-          className="px-3 py-2 focus:outline-none bg-transparent"
           value={value}
           onChange={e => onChange(e.target.value)}
+          style={{ padding: '8px 12px', border: 'none', outline: 'none', background: 'transparent', fontSize: '0.9375rem', color: '#1e293b', cursor: 'pointer' }}
         />
         <button
           type="button"
           onClick={() => ref.current?.showPicker?.()}
-          className="px-2 py-2 text-gray-400 hover:text-gray-600"
           tabIndex={-1}
           title="カレンダーを開く"
+          style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '6px 10px', color: '#94a3b8', fontSize: '1rem' }}
         >
           📅
         </button>
@@ -42,6 +41,86 @@ function DateInput({
   );
 }
 
+// ── HoverButton ──────────────────────────────────────────────────────────────
+function HoverButton({
+  onClick, disabled, children, variant = 'primary', style: extraStyle,
+}: {
+  onClick?: () => void;
+  disabled?: boolean;
+  children: React.ReactNode;
+  variant?: 'primary' | 'secondary' | 'danger' | 'outline-danger' | 'ghost';
+  style?: React.CSSProperties;
+}) {
+  const [hover, setHover] = useState(false);
+
+  const base: React.CSSProperties = {
+    border: 'none', borderRadius: '8px', cursor: disabled ? 'default' : 'pointer',
+    fontWeight: 600, fontSize: '0.875rem', padding: '9px 20px',
+    transition: 'background 0.15s, box-shadow 0.15s, transform 0.1s',
+    transform: hover && !disabled ? 'translateY(-1px)' : 'none',
+    opacity: disabled ? 0.6 : 1,
+  };
+
+  const variants: Record<string, React.CSSProperties> = {
+    primary: {
+      background: hover && !disabled ? '#1d4ed8' : '#2563eb',
+      color: '#fff',
+      boxShadow: hover && !disabled ? '0 4px 12px rgba(37,99,235,0.35)' : '0 1px 3px rgba(0,0,0,0.1)',
+    },
+    secondary: {
+      background: hover && !disabled ? '#16a34a' : '#22c55e',
+      color: '#fff',
+      boxShadow: hover && !disabled ? '0 4px 12px rgba(34,197,94,0.35)' : '0 1px 3px rgba(0,0,0,0.1)',
+    },
+    danger: {
+      background: hover && !disabled ? '#b91c1c' : '#dc2626',
+      color: '#fff',
+      boxShadow: hover && !disabled ? '0 4px 12px rgba(220,38,38,0.35)' : '0 1px 3px rgba(0,0,0,0.1)',
+    },
+    'outline-danger': {
+      background: hover && !disabled ? '#fee2e2' : 'transparent',
+      color: '#dc2626',
+      border: '1px solid #fca5a5',
+      boxShadow: 'none',
+    },
+    ghost: {
+      background: hover && !disabled ? '#f1f5f9' : 'transparent',
+      color: '#64748b',
+      boxShadow: 'none',
+    },
+  };
+
+  return (
+    <button
+      onClick={onClick}
+      disabled={disabled}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{ ...base, ...variants[variant], ...extraStyle }}
+    >
+      {children}
+    </button>
+  );
+}
+
+// ── Card component ───────────────────────────────────────────────────────────
+function Card({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <div
+      style={{
+        background: '#fff', borderRadius: '12px',
+        border: '1px solid #e2e8f0',
+        boxShadow: '0 1px 6px rgba(0,0,0,0.07)',
+        padding: '24px',
+        ...style,
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
+// ── Main page ────────────────────────────────────────────────────────────────
 export default function AdminPage() {
   const [pin, setPin] = useState('');
   const [pinInput, setPinInput] = useState('');
@@ -55,6 +134,9 @@ export default function AdminPage() {
   const [dates, setDates] = useState(['', '', '', '']);
   const [generating, setGenerating] = useState(false);
   const [genError, setGenError] = useState('');
+
+  const [deleting, setDeleting] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     fetch('/api/tournament')
@@ -93,15 +175,8 @@ export default function AdminPage() {
 
     setGenerating(true);
     try {
-      const newSeason = generateSeason(
-        playerNames.map(n => n.trim()),
-        dates,
-        seasonName.trim()
-      );
-      const res = await adminFetch('/api/tournament', {
-        method: 'POST',
-        body: JSON.stringify(newSeason),
-      });
+      const newSeason = generateSeason(playerNames.map(n => n.trim()), dates, seasonName.trim());
+      const res = await adminFetch('/api/tournament', { method: 'POST', body: JSON.stringify(newSeason) });
       if (res.status === 401) { handleUnauthorized(); return; }
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
@@ -118,33 +193,34 @@ export default function AdminPage() {
   };
 
   const handleSessionSave = async (sessionId: string, matches: Match[]) => {
-    const res = await adminFetch(`/api/tournament/session/${sessionId}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ matches }),
-    });
+    const res = await adminFetch(`/api/tournament/session/${sessionId}`, { method: 'PATCH', body: JSON.stringify({ matches }) });
     if (res.status === 401) { handleUnauthorized(); return; }
     if (!res.ok) return;
-    setSeason(prev =>
-      prev
-        ? { ...prev, sessions: prev.sessions.map(s => s.id === sessionId ? { ...s, matches } : s) }
-        : prev
-    );
+    setSeason(prev => prev ? { ...prev, sessions: prev.sessions.map(s => s.id === sessionId ? { ...s, matches } : s) } : prev);
   };
 
   const handleDateChange = async (sessionId: string, date: string) => {
-    const res = await adminFetch(`/api/tournament/session/${sessionId}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ date }),
-    });
+    const res = await adminFetch(`/api/tournament/session/${sessionId}`, { method: 'PATCH', body: JSON.stringify({ date }) });
     if (res.status === 401) { handleUnauthorized(); return; }
     if (!res.ok) return;
-    setSeason(prev =>
-      prev
-        ? { ...prev, sessions: prev.sessions.map(s => s.id === sessionId ? { ...s, date } : s) }
-        : prev
-    );
+    setSeason(prev => prev ? { ...prev, sessions: prev.sessions.map(s => s.id === sessionId ? { ...s, date } : s) } : prev);
   };
 
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      const res = await adminFetch('/api/tournament', { method: 'DELETE' });
+      if (res.status === 401) { handleUnauthorized(); return; }
+      if (!res.ok) return;
+      setSeason(null);
+      setMode('view');
+      setShowDeleteConfirm(false);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
+  // ── Loading ──
   if (season === undefined) {
     return (
       <main style={{ maxWidth: '960px', margin: '0 auto', padding: '2rem 1.5rem' }}>
@@ -153,126 +229,181 @@ export default function AdminPage() {
     );
   }
 
+  // ── PIN screen ──
   if (!pin) {
     return (
       <main style={{ maxWidth: '400px', margin: '5rem auto 0', padding: '0 1.5rem' }}>
-        <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1.5rem', color: '#1e293b' }}>管理者ページ</h1>
-        {pinError && <p className="text-red-500 text-sm mb-3">{pinError}</p>}
-        <div className="flex flex-col gap-3">
-          <input
-            type="password"
-            value={pinInput}
-            onChange={e => setPinInput(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && handlePinSubmit()}
-            placeholder="管理者PIN"
-            className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
-            autoFocus
-          />
-          <button
-            onClick={handlePinSubmit}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-          >
-            ログイン
-          </button>
-        </div>
+        <Card>
+          <h1 style={{ fontSize: '1.375rem', fontWeight: 'bold', marginBottom: '1.5rem', color: '#1e293b' }}>
+            ⚙️ 管理者ページ
+          </h1>
+          {pinError && (
+            <div style={{ background: '#fee2e2', border: '1px solid #fecaca', borderRadius: '8px', padding: '10px 14px', marginBottom: '16px', color: '#dc2626', fontSize: '0.875rem' }}>
+              {pinError}
+            </div>
+          )}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <input
+              type="password"
+              value={pinInput}
+              onChange={e => setPinInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handlePinSubmit()}
+              placeholder="管理者PIN"
+              autoFocus
+              style={{ border: '1px solid #d1d5db', borderRadius: '8px', padding: '10px 14px', fontSize: '1rem', outline: 'none', color: '#1e293b' }}
+            />
+            <HoverButton onClick={handlePinSubmit} variant="primary" style={{ padding: '10px', fontSize: '0.9375rem' }}>
+              ログイン
+            </HoverButton>
+          </div>
+        </Card>
       </main>
     );
   }
 
+  // ── Generate form ──
   if (mode === 'generate' || !season) {
     return (
       <main style={{ maxWidth: '560px', margin: '0 auto', padding: '2rem 1.5rem' }}>
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold">スケジュール生成</h1>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '24px' }}>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1e293b' }}>スケジュール生成</h1>
           {season && (
-            <button
-              onClick={() => setMode('view')}
-              className="text-sm text-gray-500 hover:text-gray-700"
-            >
+            <HoverButton onClick={() => setMode('view')} variant="ghost">
               ← キャンセル
-            </button>
+            </HoverButton>
           )}
         </div>
 
         {genError && (
-          <p className="text-red-500 text-sm mb-4 p-3 bg-red-50 rounded">{genError}</p>
+          <div style={{ background: '#fee2e2', border: '1px solid #fecaca', borderRadius: '8px', padding: '12px 16px', marginBottom: '20px', color: '#dc2626', fontSize: '0.875rem' }}>
+            {genError}
+          </div>
         )}
 
-        <section className="mb-6">
-          <label className="block text-sm font-semibold mb-2">シーズン名</label>
+        <Card style={{ marginBottom: '16px' }}>
+          <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 700, color: '#374151', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            シーズン名
+          </label>
           <input
-            className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
             value={seasonName}
             onChange={e => setSeasonName(e.target.value)}
             placeholder="例: Season 5"
+            style={{ width: '100%', border: '1px solid #d1d5db', borderRadius: '8px', padding: '10px 14px', fontSize: '0.9375rem', outline: 'none', color: '#1e293b', boxSizing: 'border-box' }}
           />
-        </section>
+        </Card>
 
-        <section className="mb-6">
-          <label className="block text-sm font-semibold mb-2">プレイヤー名（4人）</label>
-          <div className="flex flex-col gap-2">
+        <Card style={{ marginBottom: '16px' }}>
+          <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 700, color: '#374151', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            プレイヤー名（4人）
+          </label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {playerNames.map((name, i) => (
-              <input
-                key={i}
-                className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:border-blue-400"
-                value={name}
-                onChange={e =>
-                  setPlayerNames(prev => prev.map((n, j) => (j === i ? e.target.value : n)))
-                }
-                placeholder={`プレイヤー${i + 1}`}
-              />
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <span style={{ fontSize: '0.8125rem', color: '#64748b', width: '24px', textAlign: 'right', flexShrink: 0 }}>{i + 1}</span>
+                <input
+                  value={name}
+                  onChange={e => setPlayerNames(prev => prev.map((n, j) => j === i ? e.target.value : n))}
+                  placeholder={`プレイヤー${i + 1}`}
+                  style={{ flex: 1, border: '1px solid #d1d5db', borderRadius: '8px', padding: '9px 12px', fontSize: '0.9375rem', outline: 'none', color: '#1e293b' }}
+                />
+              </div>
             ))}
           </div>
-        </section>
+        </Card>
 
-        <section className="mb-8">
-          <label className="block text-sm font-semibold mb-2">開催日（4日程）</label>
-          <div className="flex flex-col gap-2">
+        <Card style={{ marginBottom: '24px' }}>
+          <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 700, color: '#374151', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            開催日（4日程）
+          </label>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             {dates.map((date, i) => (
               <DateInput
                 key={i}
                 label={`第${i + 1}回`}
                 value={date}
-                onChange={v => setDates(prev => prev.map((d, j) => (j === i ? v : d)))}
+                onChange={v => setDates(prev => prev.map((d, j) => j === i ? v : d))}
               />
             ))}
           </div>
-        </section>
+        </Card>
 
-        <button
+        <HoverButton
           onClick={handleGenerate}
           disabled={generating}
-          className="w-full py-3 bg-green-600 text-white font-semibold rounded hover:bg-green-700 disabled:opacity-50 transition-colors"
+          variant="secondary"
+          style={{ width: '100%', padding: '12px', fontSize: '1rem' }}
         >
-          {generating ? '生成中...' : 'スケジュールを生成・保存'}
-        </button>
+          {generating ? '生成中...' : '🎯 スケジュールを生成・保存'}
+        </HoverButton>
       </main>
     );
   }
 
+  // ── View mode ──
   return (
-    <main style={{ maxWidth: '960px', margin: '0 auto', padding: '2rem 1.5rem' }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
-        <div>
-          <h1 className="reisho" style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#1e293b' }}>{season.name}</h1>
-          <p style={{ color: '#64748b', fontSize: '0.875rem', marginTop: '0.25rem' }}>
-            参加プレイヤー: {season.players.map(p => p.name).join('・')}
-          </p>
+    <main style={{ maxWidth: '980px', margin: '0 auto', padding: '2rem 1.5rem' }}>
+      {/* Header card */}
+      <Card style={{ marginBottom: '24px' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+          <div>
+            <h1 className="reisho" style={{ fontSize: '1.75rem', fontWeight: 'bold', color: '#1e293b' }}>
+              {season.name}
+            </h1>
+            <p style={{ color: '#64748b', fontSize: '0.875rem', marginTop: '4px' }}>
+              参加プレイヤー: {season.players.map(p => p.name).join('・')}
+            </p>
+          </div>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0 }}>
+            <HoverButton onClick={() => setMode('generate')} variant="outline-danger">
+              🔄 再生成
+            </HoverButton>
+            <HoverButton onClick={() => setShowDeleteConfirm(true)} variant="danger">
+              🗑️ 削除
+            </HoverButton>
+          </div>
         </div>
-        <button
-          onClick={() => setMode('generate')}
-          style={{ padding: '0.375rem 0.75rem', fontSize: '0.75rem', border: '1px solid #fca5a5', color: '#ef4444', borderRadius: '0.375rem', background: 'transparent', cursor: 'pointer' }}
-        >
-          再生成
-        </button>
-      </div>
+      </Card>
 
-      <SessionTabs
-        season={season}
-        isAdmin
-        onSessionSave={handleSessionSave}
-        onDateChange={handleDateChange}
-      />
+      {/* Session tabs card */}
+      <Card>
+        <SessionTabs
+          season={season}
+          isAdmin
+          onSessionSave={handleSessionSave}
+          onDateChange={handleDateChange}
+        />
+      </Card>
+
+      {/* Delete confirmation modal */}
+      {showDeleteConfirm && (
+        <div
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            zIndex: 500, padding: '1rem',
+          }}
+        >
+          <Card style={{ maxWidth: '400px', width: '100%', boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+            <h2 style={{ fontSize: '1.125rem', fontWeight: 700, color: '#1e293b', marginBottom: '12px' }}>
+              🗑️ スケジュールを削除
+            </h2>
+            <p style={{ color: '#475569', fontSize: '0.9375rem', marginBottom: '8px' }}>
+              <strong>{season.name}</strong> のすべてのデータを削除します。
+            </p>
+            <p style={{ color: '#ef4444', fontSize: '0.875rem', marginBottom: '24px' }}>
+              この操作は取り消せません。
+            </p>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <HoverButton onClick={() => setShowDeleteConfirm(false)} variant="ghost">
+                キャンセル
+              </HoverButton>
+              <HoverButton onClick={handleDelete} disabled={deleting} variant="danger">
+                {deleting ? '削除中...' : '削除する'}
+              </HoverButton>
+            </div>
+          </Card>
+        </div>
+      )}
     </main>
   );
 }

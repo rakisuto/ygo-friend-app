@@ -31,3 +31,20 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: message }, { status: 500 });
   }
 }
+
+export async function DELETE(req: NextRequest) {
+  const adminPin = process.env.ADMIN_PIN;
+  if (!adminPin) {
+    return NextResponse.json({ error: 'ADMIN_PIN is not configured on the server' }, { status: 500 });
+  }
+  if (req.headers.get('x-admin-pin') !== adminPin) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  try {
+    await kv.del(KEY);
+    return NextResponse.json({ ok: true });
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}

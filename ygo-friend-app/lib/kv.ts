@@ -24,4 +24,7 @@ export const kv = {
   async set(key: string, value: unknown): Promise<void> {
     await exec(['SET', key, JSON.stringify(value)]);
   },
+  async del(key: string): Promise<void> {
+    await exec(['DEL', key]);
+  },
 };
