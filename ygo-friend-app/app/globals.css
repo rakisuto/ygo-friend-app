@@ -76,3 +76,31 @@ table, th, td {
   border-collapse: collapse;
 }
 
+/* ── モバイル対応ユーティリティ ── */
+
+/* タブバー横スクロール（スクロールバー非表示） */
+.tab-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.tab-scroll::-webkit-scrollbar { display: none; }
+
+/* テーブル横スクロールラッパー */
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ページ本体の余白（スマホで縮小） */
+.page-main {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem;
+}
+@media (max-width: 640px) {
+  .page-main {
+    padding: 1.25rem 0.875rem;
+  }
+}
+

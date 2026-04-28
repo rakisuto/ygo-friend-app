@@ -14,7 +14,7 @@ export default async function TournamentPage() {
 
   if (!season) {
     return (
-      <main style={{ maxWidth: '960px', margin: '0 auto', padding: '2rem 1.5rem' }}>
+      <main className="page-main">
         <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>対戦表</h1>
         <p style={{ color: '#94a3b8' }}>スケジュールはまだ生成されていません。</p>
       </main>
@@ -22,9 +22,9 @@ export default async function TournamentPage() {
   }
 
   return (
-    <main style={{ maxWidth: '960px', margin: '0 auto', padding: '2rem 1.5rem' }}>
-      <div style={{ marginBottom: '1.5rem' }}>
-        <h1 className="reisho" style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#1e293b' }}>
+    <main className="page-main">
+      <div style={{ marginBottom: '1.25rem' }}>
+        <h1 className="reisho" style={{ fontSize: 'clamp(1.4rem, 5vw, 1.8rem)', fontWeight: 'bold', color: '#1e293b' }}>
           {season.name}
         </h1>
         <p style={{ color: '#64748b', fontSize: '0.875rem', marginTop: '0.25rem' }}>

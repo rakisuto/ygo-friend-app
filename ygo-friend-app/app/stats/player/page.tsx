@@ -13,9 +13,9 @@ export default async function PlayerStatsPage() {
   }
 
   return (
-    <main style={{ maxWidth: '800px', margin: '0 auto', padding: '2rem 1.5rem' }}>
-      <div style={{ marginBottom: '1.5rem' }}>
-        <h1 className="reisho" style={{ fontSize: '1.8rem', fontWeight: 'bold', color: '#1e293b' }}>
+    <main className="page-main" style={{ maxWidth: '800px' }}>
+      <div style={{ marginBottom: '1.25rem' }}>
+        <h1 className="reisho" style={{ fontSize: 'clamp(1.4rem, 5vw, 1.8rem)', fontWeight: 'bold', color: '#1e293b' }}>
           個人成績
         </h1>
         {season && (
