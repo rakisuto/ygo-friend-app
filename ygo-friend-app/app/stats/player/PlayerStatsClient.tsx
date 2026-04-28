@@ -204,43 +204,51 @@ export default function PlayerStatsClient({ season }: Props) {
             )}
           </SectionCard>
 
-          {/* 有利 / 不利テーマ */}
-          {(stats.advantageThemes.length > 0 || stats.disadvantageThemes.length > 0) && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '16px' }}>
-              <SectionCard title="有利テーマ TOP3">
-                {stats.advantageThemes.length === 0 ? (
-                  <p style={{ color: '#94a3b8', fontSize: '0.875rem' }}>データなし</p>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    {stats.advantageThemes.map((t, i) => (
-                      <div key={t.deck} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>{RANK_MEDAL[String(i + 1)] ?? `${i + 1}.`}</span>
-                        <span style={{ flex: 1, fontWeight: 600, color: '#1e293b', fontSize: '0.9375rem', wordBreak: 'break-word' }}>{t.deck}</span>
-                        <span style={{ fontWeight: 700, color: '#16a34a', fontSize: '0.875rem', flexShrink: 0 }}>{t.winRate}%</span>
-                        <span style={{ color: '#94a3b8', fontSize: '0.75rem', flexShrink: 0 }}>({t.wins}-{t.losses})</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </SectionCard>
-              <SectionCard title="不利テーマ TOP3">
-                {stats.disadvantageThemes.length === 0 ? (
-                  <p style={{ color: '#94a3b8', fontSize: '0.875rem' }}>データなし</p>
-                ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                    {stats.disadvantageThemes.map((t, i) => (
-                      <div key={t.deck} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>{RANK_MEDAL[String(i + 1)] ?? `${i + 1}.`}</span>
-                        <span style={{ flex: 1, fontWeight: 600, color: '#1e293b', fontSize: '0.9375rem', wordBreak: 'break-word' }}>{t.deck}</span>
-                        <span style={{ fontWeight: 700, color: '#dc2626', fontSize: '0.875rem', flexShrink: 0 }}>{t.winRate}%</span>
-                        <span style={{ color: '#94a3b8', fontSize: '0.75rem', flexShrink: 0 }}>({t.wins}-{t.losses})</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </SectionCard>
-            </div>
-          )}
+          {/* 有利 / 不利テーマ — 常に3行表示、該当なしは「—」 */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '16px' }}>
+            <SectionCard title="有利テーマ TOP3（1勝以上）">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {[0, 1, 2].map(i => {
+                  const t = stats.advantageThemes[i];
+                  return (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', minHeight: '24px' }}>
+                      <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>{RANK_MEDAL[String(i + 1)]}</span>
+                      {t ? (
+                        <>
+                          <span style={{ flex: 1, fontWeight: 600, color: '#1e293b', fontSize: '0.9375rem', wordBreak: 'break-word' }}>{t.deck}</span>
+                          <span style={{ fontWeight: 700, color: '#16a34a', fontSize: '0.875rem', flexShrink: 0 }}>{t.winRate}%</span>
+                          <span style={{ color: '#94a3b8', fontSize: '0.75rem', flexShrink: 0 }}>({t.wins}-{t.losses})</span>
+                        </>
+                      ) : (
+                        <span style={{ color: '#cbd5e1', fontSize: '0.9375rem' }}>—</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </SectionCard>
+            <SectionCard title="不利テーマ TOP3（1敗以上）">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {[0, 1, 2].map(i => {
+                  const t = stats.disadvantageThemes[i];
+                  return (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', minHeight: '24px' }}>
+                      <span style={{ fontSize: '1.1rem', flexShrink: 0 }}>{RANK_MEDAL[String(i + 1)]}</span>
+                      {t ? (
+                        <>
+                          <span style={{ flex: 1, fontWeight: 600, color: '#1e293b', fontSize: '0.9375rem', wordBreak: 'break-word' }}>{t.deck}</span>
+                          <span style={{ fontWeight: 700, color: '#dc2626', fontSize: '0.875rem', flexShrink: 0 }}>{t.winRate}%</span>
+                          <span style={{ color: '#94a3b8', fontSize: '0.75rem', flexShrink: 0 }}>({t.wins}-{t.losses})</span>
+                        </>
+                      ) : (
+                        <span style={{ color: '#cbd5e1', fontSize: '0.9375rem' }}>—</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </SectionCard>
+          </div>
         </>
       )}
     </div>

@@ -131,11 +131,15 @@ export function computePlayerStats(season: Season, playerId: string): PlayerStat
     winRate: winRate(r.wins, r.wins + r.losses),
   }));
 
+  // 有利: 1勝以上したテーマのみ。勝率降順、同率は勝数降順
   const advantageThemes = [...themeList]
+    .filter(t => t.wins > 0)
     .sort((a, b) => b.winRate - a.winRate || b.wins - a.wins)
     .slice(0, 3);
 
+  // 不利: 1敗以上したテーマのみ。勝率昇順、同率は敗数降順
   const disadvantageThemes = [...themeList]
+    .filter(t => t.losses > 0)
     .sort((a, b) => a.winRate - b.winRate || b.losses - a.losses)
     .slice(0, 3);
 

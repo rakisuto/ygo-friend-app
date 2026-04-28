@@ -43,7 +43,8 @@ export default async function OverallStatsPage() {
           <div
             style={{
               background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0',
-              boxShadow: '0 1px 4px rgba(0,0,0,0.06)', marginBottom: '24px', overflow: 'hidden',
+              boxShadow: '0 1px 4px rgba(0,0,0,0.06)', marginBottom: '24px',
+              overflow: 'hidden',
             }}
           >
             <div style={{ padding: '14px 16px', borderBottom: '1px solid #f1f5f9' }}>
@@ -112,6 +113,8 @@ export default async function OverallStatsPage() {
                 </tbody>
               </table>
             </div>
+            {/* overflow:hidden + border-radius のクリッピング防止スペーサー */}
+            <div style={{ height: '1px' }} />
           </div>
 
           {/* デッキ使用率 */}
