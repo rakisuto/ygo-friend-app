@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import { kv } from '@/lib/kv';
 import type { Season } from '@/app/tournament/types';
 
@@ -23,6 +24,9 @@ export async function PATCH(
       s.id === params.sessionId ? { ...s, ...patch } : s
     );
     await kv.set(KEY, season);
+    revalidatePath('/tournament');
+    revalidatePath('/stats/overall');
+    revalidatePath('/stats/player');
     return NextResponse.json({ ok: true });
   } catch {
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });

@@ -7,8 +7,8 @@ import { Inter } from 'next/font/google';
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata = {
-  title: 'リミットレギュレーション一覧',
-  description: 'マスターデュエルのローカルリミットレギュレーション一覧を表示するアプリです。',
+  title: 'マスターデュエル身内戦',
+  description: 'マスターデュエル身内戦の対戦表・成績管理アプリ',
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

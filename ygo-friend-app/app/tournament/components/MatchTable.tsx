@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { Match, Player, Session } from '../types';
 import { DECK_THEMES } from '@/data/deckThemes';
 
@@ -23,7 +23,14 @@ const COL = {
 export default function MatchTable({ session, players, isAdmin, onSave }: Props) {
   const [edited, setEdited] = useState<Match[]>(session.matches);
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [toastState, setToastState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+
+  useEffect(() => {
+    if (toastState === 'saved' || toastState === 'error') {
+      const t = setTimeout(() => setToastState('idle'), 2500);
+      return () => clearTimeout(t);
+    }
+  }, [toastState]);
 
   const playerMap = Object.fromEntries(players.map(p => [p.id, p.name]));
   // datalist は session ごとに一意な id を使う
@@ -33,15 +40,18 @@ export default function MatchTable({ session, players, isAdmin, onSave }: Props)
     setEdited(prev =>
       prev.map((m, i) => (i === index ? { ...m, [field]: value || null } : m))
     );
-    setSaved(false);
+    if (toastState === 'saved') setToastState('idle');
   };
 
   const handleSave = async () => {
     if (!onSave) return;
     setSaving(true);
+    setToastState('saving');
     try {
       await onSave(edited);
-      setSaved(true);
+      setToastState('saved');
+    } catch {
+      setToastState('error');
     } finally {
       setSaving(false);
     }
@@ -172,14 +182,34 @@ export default function MatchTable({ session, players, isAdmin, onSave }: Props)
             onClick={handleSave}
             disabled={saving}
             style={{
-              padding: '6px 20px', background: saving ? '#93c5fd' : '#2563eb',
+              padding: '6px 20px',
+              background: saving ? '#93c5fd' : '#2563eb',
               color: '#fff', border: 'none', borderRadius: '20px',
               fontSize: '0.875rem', cursor: saving ? 'default' : 'pointer',
+              transition: 'background 0.2s',
             }}
           >
             {saving ? '保存中...' : '保存'}
           </button>
-          {saved && <span style={{ color: '#16a34a', fontSize: '0.875rem' }}>✓ 保存しました</span>}
+
+          {/* Toast */}
+          {toastState !== 'idle' && (
+            <span
+              style={{
+                display: 'inline-flex', alignItems: 'center', gap: '6px',
+                padding: '5px 14px', borderRadius: '20px', fontSize: '0.8125rem', fontWeight: 600,
+                ...(toastState === 'saving'
+                  ? { background: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe' }
+                  : toastState === 'saved'
+                  ? { background: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0' }
+                  : { background: '#fff1f2', color: '#dc2626', border: '1px solid #fecdd3' }),
+              }}
+            >
+              {toastState === 'saving' && '⏳ 保存中...'}
+              {toastState === 'saved'  && '✅ 保存しました'}
+              {toastState === 'error'  && '❌ 保存に失敗しました'}
+            </span>
+          )}
         </div>
       )}
     </div>
