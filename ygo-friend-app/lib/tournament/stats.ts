@@ -205,3 +205,44 @@ export function computeDeckUsage(season: Season): DeckUsage[] {
     .map(([name, value]) => ({ name, value }))
     .sort((a, b) => b.value - a.value);
 }
+
+// ────── deck win stats for win-rate ranking ──────
+
+export interface DeckWinStat {
+  name: string;
+  wins: number;
+  losses: number;
+  winRate: number;
+}
+
+export function computeDeckWinStats(season: Season): DeckWinStat[] {
+  const raw: Record<string, { wins: number; losses: number }> = {};
+
+  for (const s of season.sessions) {
+    for (const m of s.matches) {
+      if (!m.winnerId) continue;
+
+      if (m.firstPlayerDeck) {
+        if (!raw[m.firstPlayerDeck]) raw[m.firstPlayerDeck] = { wins: 0, losses: 0 };
+        if (m.winnerId === m.firstPlayerId) raw[m.firstPlayerDeck].wins++;
+        else raw[m.firstPlayerDeck].losses++;
+      }
+
+      if (m.secondPlayerDeck) {
+        if (!raw[m.secondPlayerDeck]) raw[m.secondPlayerDeck] = { wins: 0, losses: 0 };
+        if (m.winnerId === m.secondPlayerId) raw[m.secondPlayerDeck].wins++;
+        else raw[m.secondPlayerDeck].losses++;
+      }
+    }
+  }
+
+  return Object.entries(raw)
+    .map(([name, r]) => ({
+      name,
+      wins: r.wins,
+      losses: r.losses,
+      winRate: winRate(r.wins, r.wins + r.losses),
+    }))
+    .filter(d => d.wins > 0)
+    .sort((a, b) => b.winRate - a.winRate || b.wins - a.wins);
+}

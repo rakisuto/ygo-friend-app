@@ -1,6 +1,6 @@
 import { kv } from '@/lib/kv';
 import type { Season } from '@/app/tournament/types';
-import { computeStandings, computeDeckUsage } from '@/lib/tournament/stats';
+import { computeStandings, computeDeckUsage, computeDeckWinStats } from '@/lib/tournament/stats';
 import DeckPieChart from './DeckPieChart';
 
 export const revalidate = 0;
@@ -21,6 +21,7 @@ export default async function OverallStatsPage() {
 
   const standings = season ? computeStandings(season) : [];
   const deckUsage = season ? computeDeckUsage(season) : [];
+  const deckWinStats = season ? computeDeckWinStats(season) : [];
 
   return (
     <main className="page-main" style={{ maxWidth: '800px' }}>
@@ -128,7 +129,7 @@ export default async function OverallStatsPage() {
             <p style={{ fontSize: '0.8125rem', color: '#94a3b8', marginBottom: '14px' }}>
               全試合における各デッキの使用回数（先攻・後攻それぞれカウント）
             </p>
-            <DeckPieChart data={deckUsage} />
+            <DeckPieChart data={deckUsage} winStats={deckWinStats} />
           </div>
         </>
       )}
