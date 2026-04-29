@@ -213,25 +213,35 @@ export interface DeckWinStat {
   wins: number;
   losses: number;
   winRate: number;
+  firstWins: number;
+  secondWins: number;
 }
 
 export function computeDeckWinStats(season: Season): DeckWinStat[] {
-  const raw: Record<string, { wins: number; losses: number }> = {};
+  const raw: Record<string, { wins: number; losses: number; firstWins: number; secondWins: number }> = {};
 
   for (const s of season.sessions) {
     for (const m of s.matches) {
       if (!m.winnerId) continue;
 
       if (m.firstPlayerDeck) {
-        if (!raw[m.firstPlayerDeck]) raw[m.firstPlayerDeck] = { wins: 0, losses: 0 };
-        if (m.winnerId === m.firstPlayerId) raw[m.firstPlayerDeck].wins++;
-        else raw[m.firstPlayerDeck].losses++;
+        if (!raw[m.firstPlayerDeck]) raw[m.firstPlayerDeck] = { wins: 0, losses: 0, firstWins: 0, secondWins: 0 };
+        if (m.winnerId === m.firstPlayerId) {
+          raw[m.firstPlayerDeck].wins++;
+          raw[m.firstPlayerDeck].firstWins++;
+        } else {
+          raw[m.firstPlayerDeck].losses++;
+        }
       }
 
       if (m.secondPlayerDeck) {
-        if (!raw[m.secondPlayerDeck]) raw[m.secondPlayerDeck] = { wins: 0, losses: 0 };
-        if (m.winnerId === m.secondPlayerId) raw[m.secondPlayerDeck].wins++;
-        else raw[m.secondPlayerDeck].losses++;
+        if (!raw[m.secondPlayerDeck]) raw[m.secondPlayerDeck] = { wins: 0, losses: 0, firstWins: 0, secondWins: 0 };
+        if (m.winnerId === m.secondPlayerId) {
+          raw[m.secondPlayerDeck].wins++;
+          raw[m.secondPlayerDeck].secondWins++;
+        } else {
+          raw[m.secondPlayerDeck].losses++;
+        }
       }
     }
   }
@@ -242,7 +252,9 @@ export function computeDeckWinStats(season: Season): DeckWinStat[] {
       wins: r.wins,
       losses: r.losses,
       winRate: winRate(r.wins, r.wins + r.losses),
+      firstWins: r.firstWins,
+      secondWins: r.secondWins,
     }))
     .filter(d => d.wins > 0)
-    .sort((a, b) => b.winRate - a.winRate || b.wins - a.wins);
+    .sort((a, b) => b.wins - a.wins || b.winRate - a.winRate);
 }

@@ -19,30 +19,26 @@ interface Props {
   winStats: DeckWinStat[];
 }
 
-/** 勝率TOP3をランクグループ（同率まとめ）で返す */
-function buildWinRankGroups(winStats: DeckWinStat[]): { rank: number; winRate: number; items: DeckWinStat[] }[] {
-  const groups: { rank: number; winRate: number; items: DeckWinStat[] }[] = [];
-  let rankCounter = 1;
+/** 勝利数TOP3をランクグループ（同数まとめ）で返す */
+function buildWinRankGroups(winStats: DeckWinStat[]): { rank: number; wins: number; items: DeckWinStat[] }[] {
+  const groups: { rank: number; wins: number; items: DeckWinStat[] }[] = [];
 
   for (const stat of winStats) {
-    if (groups.length === 0 || stat.winRate !== groups[groups.length - 1].winRate) {
+    if (groups.length === 0 || stat.wins !== groups[groups.length - 1].wins) {
       if (groups.length >= 3) break;
-      groups.push({ rank: rankCounter, winRate: stat.winRate, items: [stat] });
+      groups.push({ rank: 0, wins: stat.wins, items: [stat] });
     } else {
       groups[groups.length - 1].items.push(stat);
     }
-    rankCounter++;
   }
 
-  // rankCounter がグループ内で増えすぎないよう、rank はグループ開始時の値を使う
-  // 再計算: 1, 1+prev_group_size, ...
   let r = 1;
   for (const g of groups) {
     g.rank = r;
     r += g.items.length;
   }
 
-  return groups.slice(0, 3);
+  return groups;
 }
 
 export default function DeckPieChart({ data, winStats }: Props) {
@@ -65,8 +61,7 @@ export default function DeckPieChart({ data, winStats }: Props) {
 
   const total = data.reduce((s, d) => s + d.value, 0);
   const top3Usage = data.slice(0, 3);
-  const top3Names = new Set(top3Usage.map(d => d.name));
-  const winRankGroups = buildWinRankGroups(winStats.filter(s => top3Names.has(s.name)));
+  const winRankGroups = buildWinRankGroups(winStats);
 
   return (
     <div>
@@ -129,23 +124,19 @@ export default function DeckPieChart({ data, winStats }: Props) {
 
       {/* 勝率 TOP3 */}
       {winRankGroups.length > 0 && (
-        <RankingSection title="勝率 TOP3" note="使用率TOP3のデッキのみ対象" style={{ marginTop: '14px' }}>
-          {[0, 1, 2].map(i => {
-            const group = winRankGroups[i];
-            if (!group) {
-              return <RankRow key={i} rank={i + 1} highlight={false} left={null} right={null} sub={null} rightColor="#16a34a" />;
-            }
+        <RankingSection title="勝利数 TOP3" style={{ marginTop: '14px' }}>
+          {winRankGroups.map((group, i) => {
             const names = group.items.map(d => d.name).join('、');
-            const totalGroupWins = group.items.reduce((s, d) => s + d.wins, 0);
-            const totalGroupLosses = group.items.reduce((s, d) => s + d.losses, 0);
+            const firstWins = group.items.reduce((s, d) => s + d.firstWins, 0);
+            const secondWins = group.items.reduce((s, d) => s + d.secondWins, 0);
             return (
               <RankRow
                 key={i}
                 rank={group.rank}
                 highlight={group.rank === 1}
                 left={names}
-                right={`${group.winRate}%`}
-                sub={`${totalGroupWins}勝${totalGroupLosses}敗`}
+                right={`${group.wins}勝`}
+                sub={`先攻${firstWins}・後攻${secondWins}`}
                 rightColor="#16a34a"
               />
             );
