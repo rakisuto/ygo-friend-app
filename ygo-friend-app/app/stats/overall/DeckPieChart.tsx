@@ -65,7 +65,8 @@ export default function DeckPieChart({ data, winStats }: Props) {
 
   const total = data.reduce((s, d) => s + d.value, 0);
   const top3Usage = data.slice(0, 3);
-  const winRankGroups = buildWinRankGroups(winStats);
+  const top3Names = new Set(top3Usage.map(d => d.name));
+  const winRankGroups = buildWinRankGroups(winStats.filter(s => top3Names.has(s.name)));
 
   return (
     <div>
@@ -128,7 +129,7 @@ export default function DeckPieChart({ data, winStats }: Props) {
 
       {/* 勝率 TOP3 */}
       {winRankGroups.length > 0 && (
-        <RankingSection title="勝率 TOP3（1勝以上）" style={{ marginTop: '14px' }}>
+        <RankingSection title="勝率 TOP3" note="使用率TOP3のデッキのみ対象" style={{ marginTop: '14px' }}>
           {[0, 1, 2].map(i => {
             const group = winRankGroups[i];
             if (!group) {
@@ -158,17 +159,21 @@ export default function DeckPieChart({ data, winStats }: Props) {
 // ─── 共通UIパーツ ───────────────────────────────────────
 
 function RankingSection({
-  title, children, style,
-}: { title: string; children: React.ReactNode; style?: React.CSSProperties }) {
+  title, note, children, style,
+}: { title: string; note?: string; children: React.ReactNode; style?: React.CSSProperties }) {
   return (
     <div style={style}>
-      <p style={{
-        fontSize: '0.75rem', fontWeight: 700, color: '#64748b',
-        textTransform: 'uppercase', letterSpacing: '0.05em',
-        marginBottom: '8px', marginTop: '16px',
-      }}>
-        {title}
-      </p>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '8px', marginTop: '16px' }}>
+        <p style={{
+          fontSize: '0.75rem', fontWeight: 700, color: '#64748b',
+          textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0,
+        }}>
+          {title}
+        </p>
+        {note && (
+          <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>※ {note}</span>
+        )}
+      </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
         {children}
       </div>

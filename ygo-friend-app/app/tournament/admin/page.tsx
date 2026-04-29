@@ -138,6 +138,13 @@ export default function AdminPage() {
   const [deleting, setDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+  const [description, setDescription] = useState('');
+  const [descToast, setDescToast] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+
+  useEffect(() => {
+    if (season) setDescription(season.description ?? '');
+  }, [season]);
+
   useEffect(() => {
     fetch('/api/tournament')
       .then(r => r.json())
@@ -204,6 +211,21 @@ export default function AdminPage() {
     if (res.status === 401) { handleUnauthorized(); return; }
     if (!res.ok) return;
     setSeason(prev => prev ? { ...prev, sessions: prev.sessions.map(s => s.id === sessionId ? { ...s, date } : s) } : prev);
+  };
+
+  const handleDescriptionSave = async () => {
+    setDescToast('saving');
+    try {
+      const res = await adminFetch('/api/tournament', { method: 'PATCH', body: JSON.stringify({ description: description.trim() }) });
+      if (res.status === 401) { handleUnauthorized(); return; }
+      if (!res.ok) { setDescToast('error'); return; }
+      setSeason(prev => prev ? { ...prev, description: description.trim() } : prev);
+      setDescToast('saved');
+    } catch {
+      setDescToast('error');
+    } finally {
+      setTimeout(() => setDescToast('idle'), 2500);
+    }
   };
 
   const handleDelete = async () => {
@@ -344,7 +366,7 @@ export default function AdminPage() {
     <main style={{ maxWidth: '980px', margin: '0 auto', padding: '2rem 1.5rem' }}>
       {/* Header card */}
       <Card style={{ marginBottom: '24px' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', marginBottom: '20px' }}>
           <div>
             <h1 className="reisho" style={{ fontSize: '1.75rem', fontWeight: 'bold', color: '#1e293b' }}>
               {season.name}
@@ -360,6 +382,63 @@ export default function AdminPage() {
             <HoverButton onClick={() => setShowDeleteConfirm(true)} variant="danger">
               🗑️ 削除
             </HoverButton>
+          </div>
+        </div>
+
+        {/* 大会概要 */}
+        <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '18px' }}>
+          <label style={{
+            display: 'block', fontSize: '0.8125rem', fontWeight: 700,
+            color: '#374151', marginBottom: '10px',
+            textTransform: 'uppercase', letterSpacing: '0.04em',
+          }}>
+            📝 大会概要
+          </label>
+          <textarea
+            value={description}
+            onChange={e => {
+              if (e.target.value.length <= 1000) setDescription(e.target.value);
+            }}
+            placeholder="大会のルール・使用禁止カード・その他メモなどを入力（1000文字以内）"
+            rows={5}
+            style={{
+              width: '100%', boxSizing: 'border-box',
+              border: '1px solid #d1d5db', borderRadius: '8px',
+              padding: '10px 14px', fontSize: '0.9375rem', lineHeight: '1.7',
+              color: '#1e293b', background: '#f8fafc',
+              resize: 'vertical', outline: 'none',
+              fontFamily: '"Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif',
+            }}
+          />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '10px' }}>
+            <span style={{ fontSize: '0.75rem', color: description.length >= 900 ? '#d97706' : '#94a3b8' }}>
+              {description.length} / 1000 文字
+            </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              {descToast !== 'idle' && (
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '5px',
+                  padding: '4px 12px', borderRadius: '20px', fontSize: '0.8125rem', fontWeight: 600,
+                  ...(descToast === 'saving'
+                    ? { background: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe' }
+                    : descToast === 'saved'
+                    ? { background: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0' }
+                    : { background: '#fff1f2', color: '#dc2626', border: '1px solid #fecdd3' }),
+                }}>
+                  {descToast === 'saving' && '⏳ 保存中...'}
+                  {descToast === 'saved'  && '✅ 保存しました'}
+                  {descToast === 'error'  && '❌ 保存に失敗しました'}
+                </span>
+              )}
+              <HoverButton
+                onClick={handleDescriptionSave}
+                disabled={descToast === 'saving'}
+                variant="primary"
+                style={{ padding: '7px 20px' }}
+              >
+                保存
+              </HoverButton>
+            </div>
           </div>
         </div>
       </Card>

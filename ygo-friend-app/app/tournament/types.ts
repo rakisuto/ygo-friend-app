@@ -23,6 +23,7 @@ export interface Session {
 export interface Season {
   id: string;
   name: string;
+  description?: string;
   players: Player[];
   sessions: Session[];
   createdAt: string;
