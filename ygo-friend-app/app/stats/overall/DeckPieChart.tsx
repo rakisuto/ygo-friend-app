@@ -56,10 +56,10 @@ export default function DeckPieChart({ data }: Props) {
             ))}
           </Pie>
           <Tooltip
-            formatter={(value: number) => [
-              `${value}回 (${total > 0 ? ((value / total) * 100).toFixed(1) : 0}%)`,
-              '使用回数',
-            ]}
+            formatter={(value) => {
+              const v = typeof value === 'number' ? value : 0;
+              return [`${v}回 (${total > 0 ? ((v / total) * 100).toFixed(1) : 0}%)`, '使用回数'];
+            }}
             contentStyle={{
               borderRadius: '8px', border: '1px solid #e2e8f0',
               boxShadow: '0 2px 8px rgba(0,0,0,0.1)', fontSize: '0.875rem',
