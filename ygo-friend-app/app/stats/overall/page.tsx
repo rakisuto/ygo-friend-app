@@ -150,7 +150,7 @@ export default async function OverallStatsPage() {
           >
             <h2 style={{ fontSize: '1rem', fontWeight: 700, color: '#1e293b', marginBottom: '6px' }}>🃏 デッキ使用率</h2>
             <p style={{ fontSize: '0.8125rem', color: '#94a3b8', marginBottom: '14px' }}>
-              全試合における各デッキの使用回数（先攻・後攻それぞれカウント）
+              全試合における各デッキの使用回数・TOP3のカード画像はYGOProDeckより取得
             </p>
             <DeckPieChart data={deckUsage} winStats={deckWinStats} />
           </div>
