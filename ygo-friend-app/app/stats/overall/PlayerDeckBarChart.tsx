@@ -49,7 +49,7 @@ export default function PlayerDeckBarChart({ playerUsages, deckOrder }: Props) {
             borderRadius: '8px', border: '1px solid #e2e8f0',
             boxShadow: '0 2px 8px rgba(0,0,0,0.1)', fontSize: '0.8125rem',
           }}
-          formatter={(value: number, name: string) => [`${value}回`, name]}
+          formatter={(value, name) => [`${typeof value === 'number' ? value : 0}回`, name]}
           cursor={{ fill: 'rgba(0,0,0,0.04)' }}
         />
         <Legend
