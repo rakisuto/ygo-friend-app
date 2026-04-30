@@ -47,9 +47,14 @@ export default function PlayerDeckBarChart({ playerUsages, deckOrder }: Props) {
         <Tooltip
           contentStyle={{
             borderRadius: '8px', border: '1px solid #e2e8f0',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)', fontSize: '0.8125rem',
+            boxShadow: '0 4px 12px rgba(0,0,0,0.15)', fontSize: '0.8125rem',
+            backgroundColor: '#ffffff', opacity: 1,
           }}
-          formatter={(value, name) => [`${typeof value === 'number' ? value : 0}回`, name]}
+          formatter={(value, name) => {
+            const v = typeof value === 'number' ? value : 0;
+            if (v === 0) return [null, null] as unknown as [string, string];
+            return [`${v}回`, name];
+          }}
           cursor={{ fill: 'rgba(0,0,0,0.04)' }}
         />
         <Legend
