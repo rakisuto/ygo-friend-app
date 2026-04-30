@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { Season } from '@/app/tournament/types';
 import { computePlayerStats } from '@/lib/tournament/stats';
+import type { DeckMatchupEntry } from '@/lib/tournament/stats';
 
 interface Props { season: Season }
 
@@ -35,6 +36,77 @@ function SectionCard({ title, children }: { title: string; children: React.React
         textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px',
       }}>{title}</h3>
       {children}
+    </div>
+  );
+}
+
+/** 先攻/後攻内訳の小テキスト */
+function FirstSecondSub({ fw, fl, sw, sl }: { fw: number; fl: number; sw: number; sl: number }) {
+  return (
+    <div style={{ fontSize: '0.7rem', color: '#94a3b8', fontWeight: 400, marginTop: '2px' }}>
+      先攻 {fw}-{fl}　後攻 {sw}-{sl}
+    </div>
+  );
+}
+
+/** デッキ対面相性アコーディオン1行 */
+function MatchupAccordionItem({ entry }: { entry: DeckMatchupEntry }) {
+  const [open, setOpen] = useState(false);
+  const total = entry.totalWins + entry.totalLosses;
+  const color = entry.winRate >= 60 ? '#16a34a' : entry.winRate >= 40 ? '#d97706' : '#dc2626';
+
+  return (
+    <div style={{ border: '1px solid #e2e8f0', borderRadius: '8px', overflow: 'hidden' }}>
+      <button
+        onClick={() => setOpen(v => !v)}
+        style={{
+          width: '100%', textAlign: 'left', background: open ? '#f8fafc' : '#fff',
+          border: 'none', cursor: 'pointer', padding: '10px 14px',
+          display: 'flex', alignItems: 'center', gap: '8px',
+        }}
+      >
+        <span style={{
+          fontSize: '0.7rem', color: '#94a3b8', flexShrink: 0,
+          display: 'inline-block',
+          transition: 'transform 0.15s',
+          transform: open ? 'rotate(90deg)' : 'none',
+        }}>▶</span>
+        <span style={{ fontWeight: 600, color: '#1e293b', fontSize: '0.9375rem', flex: 1 }}>
+          {entry.myDeck}
+        </span>
+        <span style={{ fontSize: '0.8125rem', color: '#64748b', flexShrink: 0 }}>
+          {total}戦&nbsp;
+          <span style={{ color: '#16a34a' }}>{entry.totalWins}勝</span>
+          <span style={{ color: '#dc2626' }}>{entry.totalLosses}敗</span>
+          &nbsp;<span style={{ fontWeight: 700, color }}>{entry.winRate}%</span>
+        </span>
+      </button>
+
+      {open && (
+        <div style={{ background: '#fafafa', borderTop: '1px solid #f1f5f9' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8125rem' }}>
+            <tbody>
+              {entry.vsDecks.map(vs => {
+                const vsColor = vs.winRate >= 60 ? '#16a34a' : vs.winRate >= 40 ? '#d97706' : '#dc2626';
+                return (
+                  <tr key={vs.opponentDeck} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                    <td style={{ padding: '7px 14px', color: '#374151', fontWeight: 500 }}>
+                      vs {vs.opponentDeck}
+                    </td>
+                    <td style={{ padding: '7px 8px', whiteSpace: 'nowrap' }}>
+                      <span style={{ fontWeight: 700, color: vsColor }}>{vs.wins}勝{vs.losses}敗</span>
+                      <span style={{ color: '#94a3b8', marginLeft: '4px' }}>({vs.winRate}%)</span>
+                    </td>
+                    <td style={{ padding: '7px 14px 7px 4px', textAlign: 'right', color: '#64748b', fontSize: '0.75rem', whiteSpace: 'nowrap' }}>
+                      先攻 {vs.firstWins}-{vs.firstLosses} | 後攻 {vs.secondWins}-{vs.secondLosses}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }
@@ -133,17 +205,20 @@ export default function PlayerStatsClient({ season }: Props) {
                     {Object.entries(stats.deckStats)
                       .sort((a, b) => b[1].winRate - a[1].winRate)
                       .map(([deck, r]) => (
-                      <tr key={deck} style={{ borderBottom: '1px solid #f8fafc' }}>
-                        <td style={{ padding: '8px', color: '#1e293b', fontWeight: 500 }}>{deck}</td>
-                        <td style={{ padding: '8px', textAlign: 'center', color: '#16a34a', fontWeight: 600 }}>{r.wins}</td>
-                        <td style={{ padding: '8px', textAlign: 'center', color: '#dc2626', fontWeight: 600 }}>{r.losses}</td>
-                        <td style={{ padding: '8px', textAlign: 'right' }}>
-                          <span style={{ fontWeight: 700, color: r.winRate >= 60 ? '#16a34a' : r.winRate >= 40 ? '#d97706' : '#dc2626' }}>
-                            {r.winRate}%
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
+                        <tr key={deck} style={{ borderBottom: '1px solid #f8fafc' }}>
+                          <td style={{ padding: '8px', color: '#1e293b', fontWeight: 500 }}>
+                            {deck}
+                            <FirstSecondSub fw={r.firstWins} fl={r.firstLosses} sw={r.secondWins} sl={r.secondLosses} />
+                          </td>
+                          <td style={{ padding: '8px', textAlign: 'center', color: '#16a34a', fontWeight: 600 }}>{r.wins}</td>
+                          <td style={{ padding: '8px', textAlign: 'center', color: '#dc2626', fontWeight: 600 }}>{r.losses}</td>
+                          <td style={{ padding: '8px', textAlign: 'right' }}>
+                            <span style={{ fontWeight: 700, color: r.winRate >= 60 ? '#16a34a' : r.winRate >= 40 ? '#d97706' : '#dc2626' }}>
+                              {r.winRate}%
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
                   </tbody>
                 </table>
               </div>
@@ -169,7 +244,10 @@ export default function PlayerStatsClient({ season }: Props) {
                     <tbody>
                       {vsEntries.sort((a, b) => b[1].winRate - a[1].winRate).map(([id, r]) => (
                         <tr key={id} style={{ borderBottom: '1px solid #f8fafc' }}>
-                          <td style={{ padding: '8px', color: '#1e293b', fontWeight: 500 }}>{r.opponentName}</td>
+                          <td style={{ padding: '8px', color: '#1e293b', fontWeight: 500 }}>
+                            {r.opponentName}
+                            <FirstSecondSub fw={r.firstWins} fl={r.firstLosses} sw={r.secondWins} sl={r.secondLosses} />
+                          </td>
                           <td style={{ padding: '8px', textAlign: 'center', color: '#16a34a', fontWeight: 600 }}>{r.wins}</td>
                           <td style={{ padding: '8px', textAlign: 'center', color: '#dc2626', fontWeight: 600 }}>{r.losses}</td>
                           <td style={{ padding: '8px', textAlign: 'right' }}>
@@ -204,7 +282,18 @@ export default function PlayerStatsClient({ season }: Props) {
             )}
           </SectionCard>
 
-          {/* 有利 / 不利テーマ — 常に3行表示、該当なしは「—」 */}
+          {/* デッキ対面相性（アコーディオン） */}
+          {stats.deckMatchups.length > 0 && (
+            <SectionCard title="デッキ対面相性">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {stats.deckMatchups.map(entry => (
+                  <MatchupAccordionItem key={entry.myDeck} entry={entry} />
+                ))}
+              </div>
+            </SectionCard>
+          )}
+
+          {/* 有利 / 不利テーマ */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '16px' }}>
             <SectionCard title="有利テーマ TOP3（1勝以上）">
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>

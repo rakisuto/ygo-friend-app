@@ -6,6 +6,10 @@ export interface DeckRecord {
   wins: number;
   losses: number;
   winRate: number;
+  firstWins: number;
+  firstLosses: number;
+  secondWins: number;
+  secondLosses: number;
 }
 
 export interface VsPlayerRecord {
@@ -13,6 +17,10 @@ export interface VsPlayerRecord {
   losses: number;
   opponentName: string;
   winRate: number;
+  firstWins: number;
+  firstLosses: number;
+  secondWins: number;
+  secondLosses: number;
 }
 
 export interface ThemeRecord {
@@ -22,17 +30,36 @@ export interface ThemeRecord {
   winRate: number;
 }
 
+export interface DeckVsDeckRecord {
+  opponentDeck: string;
+  wins: number;
+  losses: number;
+  winRate: number;
+  firstWins: number;
+  firstLosses: number;
+  secondWins: number;
+  secondLosses: number;
+}
+
+export interface DeckMatchupEntry {
+  myDeck: string;
+  totalWins: number;
+  totalLosses: number;
+  winRate: number;
+  vsDecks: DeckVsDeckRecord[];
+}
+
 export interface PlayerStats {
   totalWins: number;
   totalLosses: number;
   winRate: number;
-  /** 自分のデッキごとの勝敗 */
+  /** 自分のデッキごとの勝敗（先攻後攻内訳付き） */
   deckStats: Record<string, DeckRecord>;
   /** 先攻での勝敗 */
   firstStats: { wins: number; losses: number; total: number };
   /** 後攻での勝敗 */
   secondStats: { wins: number; losses: number; total: number };
-  /** 対プレイヤー別勝敗 */
+  /** 対プレイヤー別勝敗（先攻後攻内訳付き） */
   vsPlayerStats: Record<string, VsPlayerRecord>;
   /** 最大連勝 */
   maxWinStreak: number;
@@ -40,6 +67,8 @@ export interface PlayerStats {
   advantageThemes: ThemeRecord[];
   /** 不利テーマ TOP3 */
   disadvantageThemes: ThemeRecord[];
+  /** デッキテーマ別対面相性 */
+  deckMatchups: DeckMatchupEntry[];
 }
 
 export interface StandingRow {
@@ -66,16 +95,33 @@ function orderedMatches(season: Season): Match[] {
 
 // ────── per-player stats ──────
 
+type RawRecord = { wins: number; losses: number; firstWins: number; firstLosses: number; secondWins: number; secondLosses: number };
+
+function emptyRaw(): RawRecord {
+  return { wins: 0, losses: 0, firstWins: 0, firstLosses: 0, secondWins: 0, secondLosses: 0 };
+}
+
+function addResult(r: RawRecord, won: boolean, isFirst: boolean) {
+  if (won) {
+    r.wins++;
+    if (isFirst) r.firstWins++; else r.secondWins++;
+  } else {
+    r.losses++;
+    if (isFirst) r.firstLosses++; else r.secondLosses++;
+  }
+}
+
 export function computePlayerStats(season: Season, playerId: string): PlayerStats {
   const playerMap = Object.fromEntries(season.players.map(p => [p.id, p.name]));
 
   let totalWins = 0;
   let totalLosses = 0;
-  const deckStats: Record<string, { wins: number; losses: number }> = {};
+  const deckStats: Record<string, RawRecord> = {};
   const firstStats = { wins: 0, losses: 0, total: 0 };
   const secondStats = { wins: 0, losses: 0, total: 0 };
-  const vsRaw: Record<string, { wins: number; losses: number }> = {};
+  const vsRaw: Record<string, RawRecord> = {};
   const vsTheme: Record<string, { wins: number; losses: number }> = {};
+  const deckMatchupRaw: Record<string, Record<string, RawRecord>> = {};
 
   let maxWinStreak = 0;
   let currentStreak = 0;
@@ -96,8 +142,8 @@ export function computePlayerStats(season: Season, playerId: string): PlayerStat
 
     // own deck
     if (myDeck) {
-      if (!deckStats[myDeck]) deckStats[myDeck] = { wins: 0, losses: 0 };
-      if (won) deckStats[myDeck].wins++; else deckStats[myDeck].losses++;
+      if (!deckStats[myDeck]) deckStats[myDeck] = emptyRaw();
+      addResult(deckStats[myDeck], won, isFirst);
     }
 
     // 先後
@@ -110,20 +156,30 @@ export function computePlayerStats(season: Season, playerId: string): PlayerStat
     }
 
     // vs player
-    if (!vsRaw[opponentId]) vsRaw[opponentId] = { wins: 0, losses: 0 };
-    if (won) vsRaw[opponentId].wins++; else vsRaw[opponentId].losses++;
+    if (!vsRaw[opponentId]) vsRaw[opponentId] = emptyRaw();
+    addResult(vsRaw[opponentId], won, isFirst);
 
-    // vs theme
+    // vs theme（有利/不利テーマ用）
     if (opponentDeck) {
       if (!vsTheme[opponentDeck]) vsTheme[opponentDeck] = { wins: 0, losses: 0 };
       if (won) vsTheme[opponentDeck].wins++; else vsTheme[opponentDeck].losses++;
+    }
+
+    // deck matchup
+    if (myDeck && opponentDeck) {
+      if (!deckMatchupRaw[myDeck]) deckMatchupRaw[myDeck] = {};
+      if (!deckMatchupRaw[myDeck][opponentDeck]) deckMatchupRaw[myDeck][opponentDeck] = emptyRaw();
+      addResult(deckMatchupRaw[myDeck][opponentDeck], won, isFirst);
     }
   }
 
   const vsPlayerStats: Record<string, VsPlayerRecord> = {};
   for (const [id, r] of Object.entries(vsRaw)) {
-    const total = r.wins + r.losses;
-    vsPlayerStats[id] = { ...r, opponentName: playerMap[id] ?? id, winRate: winRate(r.wins, total) };
+    vsPlayerStats[id] = {
+      ...r,
+      opponentName: playerMap[id] ?? id,
+      winRate: winRate(r.wins, r.wins + r.losses),
+    };
   }
 
   const themeList: ThemeRecord[] = Object.entries(vsTheme).map(([deck, r]) => ({
@@ -131,13 +187,11 @@ export function computePlayerStats(season: Season, playerId: string): PlayerStat
     winRate: winRate(r.wins, r.wins + r.losses),
   }));
 
-  // 有利: 1勝以上したテーマのみ。勝率降順、同率は勝数降順
   const advantageThemes = [...themeList]
     .filter(t => t.wins > 0)
     .sort((a, b) => b.winRate - a.winRate || b.wins - a.wins)
     .slice(0, 3);
 
-  // 不利: 1敗以上したテーマのみ。勝率昇順、同率は敗数降順
   const disadvantageThemes = [...themeList]
     .filter(t => t.losses > 0)
     .sort((a, b) => a.winRate - b.winRate || b.losses - a.losses)
@@ -148,6 +202,23 @@ export function computePlayerStats(season: Season, playerId: string): PlayerStat
     deckStatsFinal[deck] = { ...r, winRate: winRate(r.wins, r.wins + r.losses) };
   }
 
+  const deckMatchups: DeckMatchupEntry[] = Object.entries(deckMatchupRaw)
+    .map(([myDeck, vsMap]) => {
+      const vsDecks: DeckVsDeckRecord[] = Object.entries(vsMap)
+        .map(([opponentDeck, r]) => ({
+          opponentDeck,
+          wins: r.wins, losses: r.losses,
+          winRate: winRate(r.wins, r.wins + r.losses),
+          firstWins: r.firstWins, firstLosses: r.firstLosses,
+          secondWins: r.secondWins, secondLosses: r.secondLosses,
+        }))
+        .sort((a, b) => b.winRate - a.winRate || b.wins - a.wins);
+      const totalWins   = vsDecks.reduce((s, v) => s + v.wins, 0);
+      const totalLosses = vsDecks.reduce((s, v) => s + v.losses, 0);
+      return { myDeck, totalWins, totalLosses, winRate: winRate(totalWins, totalWins + totalLosses), vsDecks };
+    })
+    .sort((a, b) => (b.totalWins + b.totalLosses) - (a.totalWins + a.totalLosses));
+
   return {
     totalWins, totalLosses,
     winRate: winRate(totalWins, totalWins + totalLosses),
@@ -157,6 +228,7 @@ export function computePlayerStats(season: Season, playerId: string): PlayerStat
     maxWinStreak,
     advantageThemes,
     disadvantageThemes,
+    deckMatchups,
   };
 }
 
@@ -177,7 +249,6 @@ export function computeStandings(season: Season): StandingRow[] {
     return { playerId: p.id, playerName: p.name, wins, losses, winRate: winRate(wins, wins + losses), rank: 0 };
   }).sort((a, b) => b.wins - a.wins || a.losses - b.losses);
 
-  // dense rank (同勝数→同順位、次は +人数分)
   rows.forEach((row, i) => {
     if (i === 0) { row.rank = 1; return; }
     row.rank = rows[i - 1].wins === row.wins ? rows[i - 1].rank : i + 1;
@@ -186,7 +257,7 @@ export function computeStandings(season: Season): StandingRow[] {
   return rows;
 }
 
-// ────── deck usage for pie chart ──────
+// ────── deck usage for bar chart ──────
 
 export interface DeckUsage {
   name: string;
@@ -206,7 +277,7 @@ export function computeDeckUsage(season: Season): DeckUsage[] {
     .sort((a, b) => b.value - a.value);
 }
 
-// ────── deck win stats for win-rate ranking ──────
+// ────── deck win stats for win-count ranking ──────
 
 export interface DeckWinStat {
   name: string;
@@ -223,38 +294,44 @@ export function computeDeckWinStats(season: Season): DeckWinStat[] {
   for (const s of season.sessions) {
     for (const m of s.matches) {
       if (!m.winnerId) continue;
-
       if (m.firstPlayerDeck) {
         if (!raw[m.firstPlayerDeck]) raw[m.firstPlayerDeck] = { wins: 0, losses: 0, firstWins: 0, secondWins: 0 };
-        if (m.winnerId === m.firstPlayerId) {
-          raw[m.firstPlayerDeck].wins++;
-          raw[m.firstPlayerDeck].firstWins++;
-        } else {
-          raw[m.firstPlayerDeck].losses++;
-        }
+        if (m.winnerId === m.firstPlayerId) { raw[m.firstPlayerDeck].wins++; raw[m.firstPlayerDeck].firstWins++; }
+        else raw[m.firstPlayerDeck].losses++;
       }
-
       if (m.secondPlayerDeck) {
         if (!raw[m.secondPlayerDeck]) raw[m.secondPlayerDeck] = { wins: 0, losses: 0, firstWins: 0, secondWins: 0 };
-        if (m.winnerId === m.secondPlayerId) {
-          raw[m.secondPlayerDeck].wins++;
-          raw[m.secondPlayerDeck].secondWins++;
-        } else {
-          raw[m.secondPlayerDeck].losses++;
-        }
+        if (m.winnerId === m.secondPlayerId) { raw[m.secondPlayerDeck].wins++; raw[m.secondPlayerDeck].secondWins++; }
+        else raw[m.secondPlayerDeck].losses++;
       }
     }
   }
 
   return Object.entries(raw)
-    .map(([name, r]) => ({
-      name,
-      wins: r.wins,
-      losses: r.losses,
-      winRate: winRate(r.wins, r.wins + r.losses),
-      firstWins: r.firstWins,
-      secondWins: r.secondWins,
-    }))
+    .map(([name, r]) => ({ name, ...r, winRate: winRate(r.wins, r.wins + r.losses) }))
     .filter(d => d.wins > 0)
     .sort((a, b) => b.wins - a.wins || b.winRate - a.winRate);
+}
+
+// ────── per-player deck usage (stacked bar chart) ──────
+
+export interface PlayerDeckUsage {
+  playerId: string;
+  playerName: string;
+  decks: Record<string, number>;
+}
+
+export function computePlayerDeckUsage(season: Season): PlayerDeckUsage[] {
+  return season.players.map(p => {
+    const decks: Record<string, number> = {};
+    for (const s of season.sessions) {
+      for (const m of s.matches) {
+        if (m.firstPlayerId === p.id && m.firstPlayerDeck)
+          decks[m.firstPlayerDeck] = (decks[m.firstPlayerDeck] ?? 0) + 1;
+        if (m.secondPlayerId === p.id && m.secondPlayerDeck)
+          decks[m.secondPlayerDeck] = (decks[m.secondPlayerDeck] ?? 0) + 1;
+      }
+    }
+    return { playerId: p.id, playerName: p.name, decks };
+  });
 }

@@ -1,7 +1,8 @@
 import { kv } from '@/lib/kv';
 import type { Season } from '@/app/tournament/types';
-import { computeStandings, computeDeckUsage, computeDeckWinStats } from '@/lib/tournament/stats';
+import { computeStandings, computeDeckUsage, computeDeckWinStats, computePlayerDeckUsage } from '@/lib/tournament/stats';
 import DeckPieChart from './DeckPieChart';
+import PlayerDeckBarChart from './PlayerDeckBarChart';
 
 export const revalidate = 0;
 
@@ -9,6 +10,7 @@ const RANK_BADGE: Record<number, { bg: string; color: string; label: string }> =
   1: { bg: '#fef9c3', color: '#92400e', label: '🥇' },
   2: { bg: '#f1f5f9', color: '#475569', label: '🥈' },
   3: { bg: '#fff7ed', color: '#9a3412', label: '🥉' },
+  4: { bg: '#fef2f2', color: '#991b1b', label: '💀' },
 };
 
 export default async function OverallStatsPage() {
@@ -22,6 +24,8 @@ export default async function OverallStatsPage() {
   const standings = season ? computeStandings(season) : [];
   const deckUsage = season ? computeDeckUsage(season) : [];
   const deckWinStats = season ? computeDeckWinStats(season) : [];
+  const playerDeckUsages = season ? computePlayerDeckUsage(season) : [];
+  const deckOrder = deckUsage.map(d => d.name);
 
   return (
     <main className="page-main" style={{ maxWidth: '800px' }}>
@@ -146,6 +150,7 @@ export default async function OverallStatsPage() {
             style={{
               background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0',
               boxShadow: '0 1px 4px rgba(0,0,0,0.06)', padding: '16px',
+              marginBottom: '24px',
             }}
           >
             <h2 style={{ fontSize: '1rem', fontWeight: 700, color: '#1e293b', marginBottom: '6px' }}>🃏 デッキ使用率</h2>
@@ -154,6 +159,22 @@ export default async function OverallStatsPage() {
             </p>
             <DeckPieChart data={deckUsage} winStats={deckWinStats} />
           </div>
+
+          {/* プレイヤー別デッキ使用回数 */}
+          {playerDeckUsages.some(p => Object.keys(p.decks).length > 0) && (
+            <div
+              style={{
+                background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0',
+                boxShadow: '0 1px 4px rgba(0,0,0,0.06)', padding: '16px',
+              }}
+            >
+              <h2 style={{ fontSize: '1rem', fontWeight: 700, color: '#1e293b', marginBottom: '6px' }}>📊 プレイヤー別デッキ使用回数</h2>
+              <p style={{ fontSize: '0.8125rem', color: '#94a3b8', marginBottom: '14px' }}>
+                各プレイヤーが使用したデッキの内訳
+              </p>
+              <PlayerDeckBarChart playerUsages={playerDeckUsages} deckOrder={deckOrder} />
+            </div>
+          )}
         </>
       )}
     </main>
