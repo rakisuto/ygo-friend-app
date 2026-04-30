@@ -47,7 +47,9 @@ export async function PATCH(req: NextRequest) {
     const patch = await req.json();
     const updated: Season = { ...season, ...patch };
     await kv.set(KEY, updated);
+    revalidatePath('/tournament');
     revalidatePath('/stats/overall');
+    revalidatePath('/stats/player');
     return NextResponse.json({ ok: true });
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e);

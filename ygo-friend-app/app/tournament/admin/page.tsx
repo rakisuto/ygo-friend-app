@@ -141,6 +141,11 @@ export default function AdminPage() {
   const [description, setDescription] = useState('');
   const [descToast, setDescToast] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
 
+  const [editingInfo, setEditingInfo] = useState(false);
+  const [editSeasonName, setEditSeasonName] = useState('');
+  const [editPlayerNames, setEditPlayerNames] = useState<string[]>([]);
+  const [infoToast, setInfoToast] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+
   useEffect(() => {
     if (season) setDescription(season.description ?? '');
   }, [season]);
@@ -211,6 +216,35 @@ export default function AdminPage() {
     if (res.status === 401) { handleUnauthorized(); return; }
     if (!res.ok) return;
     setSeason(prev => prev ? { ...prev, sessions: prev.sessions.map(s => s.id === sessionId ? { ...s, date } : s) } : prev);
+  };
+
+  const handleInfoEdit = () => {
+    if (!season) return;
+    setEditSeasonName(season.name);
+    setEditPlayerNames(season.players.map(p => p.name));
+    setInfoToast('idle');
+    setEditingInfo(true);
+  };
+
+  const handleInfoSave = async () => {
+    if (!season) return;
+    if (!editSeasonName.trim()) return;
+    if (editPlayerNames.some(n => !n.trim())) return;
+    setInfoToast('saving');
+    try {
+      const updatedPlayers = season.players.map((p, i) => ({ ...p, name: editPlayerNames[i].trim() }));
+      const res = await adminFetch('/api/tournament', {
+        method: 'PATCH',
+        body: JSON.stringify({ name: editSeasonName.trim(), players: updatedPlayers }),
+      });
+      if (res.status === 401) { handleUnauthorized(); return; }
+      if (!res.ok) { setInfoToast('error'); return; }
+      setSeason(prev => prev ? { ...prev, name: editSeasonName.trim(), players: updatedPlayers } : prev);
+      setInfoToast('saved');
+      setTimeout(() => { setInfoToast('idle'); setEditingInfo(false); }, 1200);
+    } catch {
+      setInfoToast('error');
+    }
   };
 
   const handleDescriptionSave = async () => {
@@ -366,24 +400,99 @@ export default function AdminPage() {
     <main style={{ maxWidth: '980px', margin: '0 auto', padding: '2rem 1.5rem' }}>
       {/* Header card */}
       <Card style={{ marginBottom: '24px' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', marginBottom: '20px' }}>
-          <div>
-            <h1 className="reisho" style={{ fontSize: '1.75rem', fontWeight: 'bold', color: '#1e293b' }}>
-              {season.name}
-            </h1>
-            <p style={{ color: '#64748b', fontSize: '0.875rem', marginTop: '4px' }}>
-              参加プレイヤー: {season.players.map(p => p.name).join('・')}
-            </p>
+        {editingInfo ? (
+          /* ── 編集モード ── */
+          <div style={{ marginBottom: '20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+              <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#374151', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                ✏️ 基本情報を編集
+              </span>
+              <HoverButton onClick={() => setEditingInfo(false)} variant="ghost" style={{ padding: '5px 12px', fontSize: '0.8125rem' }}>
+                キャンセル
+              </HoverButton>
+            </div>
+
+            {/* シーズン名 */}
+            <div style={{ marginBottom: '14px' }}>
+              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#64748b', marginBottom: '6px' }}>
+                シーズン名
+              </label>
+              <input
+                value={editSeasonName}
+                onChange={e => setEditSeasonName(e.target.value)}
+                style={{ width: '100%', boxSizing: 'border-box', border: '1px solid #d1d5db', borderRadius: '8px', padding: '9px 12px', fontSize: '0.9375rem', outline: 'none', color: '#1e293b' }}
+              />
+            </div>
+
+            {/* プレイヤー名 */}
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#64748b', marginBottom: '8px' }}>
+                プレイヤー名
+              </label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {editPlayerNames.map((name, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ fontSize: '0.8125rem', color: '#94a3b8', width: '20px', textAlign: 'right', flexShrink: 0 }}>{i + 1}</span>
+                    <input
+                      value={name}
+                      onChange={e => setEditPlayerNames(prev => prev.map((n, j) => j === i ? e.target.value : n))}
+                      style={{ flex: 1, border: '1px solid #d1d5db', borderRadius: '8px', padding: '8px 12px', fontSize: '0.9375rem', outline: 'none', color: '#1e293b' }}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '10px' }}>
+              {infoToast !== 'idle' && (
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '5px',
+                  padding: '4px 12px', borderRadius: '20px', fontSize: '0.8125rem', fontWeight: 600,
+                  ...(infoToast === 'saving'
+                    ? { background: '#eff6ff', color: '#2563eb', border: '1px solid #bfdbfe' }
+                    : infoToast === 'saved'
+                    ? { background: '#f0fdf4', color: '#16a34a', border: '1px solid #bbf7d0' }
+                    : { background: '#fff1f2', color: '#dc2626', border: '1px solid #fecdd3' }),
+                }}>
+                  {infoToast === 'saving' && '⏳ 保存中...'}
+                  {infoToast === 'saved'  && '✅ 保存しました'}
+                  {infoToast === 'error'  && '❌ 保存に失敗しました'}
+                </span>
+              )}
+              <HoverButton
+                onClick={handleInfoSave}
+                disabled={infoToast === 'saving' || !editSeasonName.trim() || editPlayerNames.some(n => !n.trim())}
+                variant="primary"
+                style={{ padding: '8px 24px' }}
+              >
+                保存
+              </HoverButton>
+            </div>
           </div>
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0 }}>
-            <HoverButton onClick={() => setMode('generate')} variant="outline-danger">
-              🔄 再生成
-            </HoverButton>
-            <HoverButton onClick={() => setShowDeleteConfirm(true)} variant="danger">
-              🗑️ 削除
-            </HoverButton>
+        ) : (
+          /* ── 表示モード ── */
+          <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap', marginBottom: '20px' }}>
+            <div>
+              <h1 className="reisho" style={{ fontSize: '1.75rem', fontWeight: 'bold', color: '#1e293b' }}>
+                {season.name}
+              </h1>
+              <p style={{ color: '#64748b', fontSize: '0.875rem', marginTop: '4px' }}>
+                参加プレイヤー: {season.players.map(p => p.name).join('・')}
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0 }}>
+              <HoverButton onClick={handleInfoEdit} variant="ghost">
+                ✏️ 編集
+              </HoverButton>
+              <HoverButton onClick={() => setMode('generate')} variant="outline-danger">
+                🔄 再生成
+              </HoverButton>
+              <HoverButton onClick={() => setShowDeleteConfirm(true)} variant="danger">
+                🗑️ 削除
+              </HoverButton>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* 大会概要 */}
         <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '18px' }}>
