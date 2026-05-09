@@ -120,10 +120,6 @@ export default function PlayerStatsClient({ season }: Props) {
   const vsEntries = stats
     ? Object.entries(stats.vsPlayerStats).filter(([, r]) => r.wins + r.losses > 0)
     : [];
-  const maxVsWinRate = vsEntries.length > 0 ? Math.max(...vsEntries.map(([, r]) => r.winRate)) : -1;
-  const minVsWinRate = vsEntries.length > 0 ? Math.min(...vsEntries.map(([, r]) => r.winRate)) : 101;
-  const advantagePlayers = vsEntries.filter(([, r]) => r.winRate === maxVsWinRate);
-  const disadvantagePlayers = vsEntries.filter(([, r]) => r.winRate === minVsWinRate);
 
   const noData = stats && stats.totalWins + stats.totalLosses === 0;
 
@@ -230,55 +226,35 @@ export default function PlayerStatsClient({ season }: Props) {
             {vsEntries.length === 0 ? (
               <p style={{ color: '#94a3b8', fontSize: '0.875rem' }}>データなし</p>
             ) : (
-              <>
-                <div className="table-scroll" style={{ marginBottom: '14px' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem', minWidth: '240px' }}>
-                    <thead>
-                      <tr style={{ borderBottom: '2px solid #f1f5f9' }}>
-                        <th style={{ textAlign: 'left', padding: '6px 8px', color: '#64748b', fontWeight: 600 }}>相手</th>
-                        <th style={{ textAlign: 'center', padding: '6px 8px', color: '#64748b', fontWeight: 600, width: '40px' }}>勝</th>
-                        <th style={{ textAlign: 'center', padding: '6px 8px', color: '#64748b', fontWeight: 600, width: '40px' }}>敗</th>
-                        <th style={{ textAlign: 'right', padding: '6px 8px', color: '#64748b', fontWeight: 600, width: '64px' }}>勝率</th>
+              <div className="table-scroll">
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem', minWidth: '240px' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '2px solid #f1f5f9' }}>
+                      <th style={{ textAlign: 'left', padding: '6px 8px', color: '#64748b', fontWeight: 600 }}>相手</th>
+                      <th style={{ textAlign: 'center', padding: '6px 8px', color: '#64748b', fontWeight: 600, width: '40px' }}>勝</th>
+                      <th style={{ textAlign: 'center', padding: '6px 8px', color: '#64748b', fontWeight: 600, width: '40px' }}>敗</th>
+                      <th style={{ textAlign: 'right', padding: '6px 8px', color: '#64748b', fontWeight: 600, width: '64px' }}>勝率</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {vsEntries.sort((a, b) => b[1].winRate - a[1].winRate).map(([id, r]) => (
+                      <tr key={id} style={{ borderBottom: '1px solid #f8fafc' }}>
+                        <td style={{ padding: '8px', color: '#1e293b', fontWeight: 500 }}>
+                          {r.opponentName}
+                          <FirstSecondSub fw={r.firstWins} fl={r.firstLosses} sw={r.secondWins} sl={r.secondLosses} />
+                        </td>
+                        <td style={{ padding: '8px', textAlign: 'center', color: '#16a34a', fontWeight: 600 }}>{r.wins}</td>
+                        <td style={{ padding: '8px', textAlign: 'center', color: '#dc2626', fontWeight: 600 }}>{r.losses}</td>
+                        <td style={{ padding: '8px', textAlign: 'right' }}>
+                          <span style={{ fontWeight: 700, color: r.winRate >= 60 ? '#16a34a' : r.winRate >= 40 ? '#d97706' : '#dc2626' }}>
+                            {r.winRate}%
+                          </span>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {vsEntries.sort((a, b) => b[1].winRate - a[1].winRate).map(([id, r]) => (
-                        <tr key={id} style={{ borderBottom: '1px solid #f8fafc' }}>
-                          <td style={{ padding: '8px', color: '#1e293b', fontWeight: 500 }}>
-                            {r.opponentName}
-                            <FirstSecondSub fw={r.firstWins} fl={r.firstLosses} sw={r.secondWins} sl={r.secondLosses} />
-                          </td>
-                          <td style={{ padding: '8px', textAlign: 'center', color: '#16a34a', fontWeight: 600 }}>{r.wins}</td>
-                          <td style={{ padding: '8px', textAlign: 'center', color: '#dc2626', fontWeight: 600 }}>{r.losses}</td>
-                          <td style={{ padding: '8px', textAlign: 'right' }}>
-                            <span style={{ fontWeight: 700, color: r.winRate >= 60 ? '#16a34a' : r.winRate >= 40 ? '#d97706' : '#dc2626' }}>
-                              {r.winRate}%
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '10px' }}>
-                  <div style={{ background: '#f0fdf4', borderRadius: '8px', padding: '12px 14px', border: '1px solid #bbf7d0' }}>
-                    <div style={{ fontSize: '0.75rem', color: '#16a34a', fontWeight: 600, marginBottom: '6px' }}>😊 有利プレイヤー</div>
-                    {advantagePlayers.map(([, r]) => (
-                      <div key={r.opponentName} style={{ fontWeight: 700, color: '#166534', fontSize: '0.9375rem' }}>
-                        {r.opponentName} <span style={{ color: '#16a34a' }}>({r.winRate}%)</span>
-                      </div>
                     ))}
-                  </div>
-                  <div style={{ background: '#fff1f2', borderRadius: '8px', padding: '12px 14px', border: '1px solid #fecdd3' }}>
-                    <div style={{ fontSize: '0.75rem', color: '#dc2626', fontWeight: 600, marginBottom: '6px' }}>😰 不利プレイヤー</div>
-                    {disadvantagePlayers.map(([, r]) => (
-                      <div key={r.opponentName} style={{ fontWeight: 700, color: '#991b1b', fontSize: '0.9375rem' }}>
-                        {r.opponentName} <span style={{ color: '#dc2626' }}>({r.winRate}%)</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </>
+                  </tbody>
+                </table>
+              </div>
             )}
           </SectionCard>
 
