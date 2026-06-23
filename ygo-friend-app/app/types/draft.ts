@@ -1,17 +1,17 @@
-export interface Theme {
+export type Theme = {
   cardId: number;
   cardName: string;
   imageUrl: string;
-}
+};
 
-export interface Player {
+export type Player = {
   name: string;
   themes: Theme[];
-}
+};
 
-export interface DraftState {
+export type DraftState = {
   players: Player[];
-}
+};
 
 export const initialDraftState: DraftState = {
   players: [
