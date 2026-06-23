@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { toPng } from 'html-to-image';
 import type { DraftState, Theme, Player } from '@/app/types/draft';
 import { initialDraftState } from '@/app/types/draft';
 
@@ -90,13 +89,33 @@ export default function DraftPage() {
   }
 
   async function handleSaveImage() {
-    if (!playerAreaRef.current) return;
+    const el = playerAreaRef.current;
+    if (!el) return;
     try {
-      const dataUrl = await toPng(playerAreaRef.current, { cacheBust: true });
+      // 外部画像をプロキシ経由のURLに差し替えてからキャプチャ
+      const imgs = Array.from(el.querySelectorAll('img')) as HTMLImageElement[];
+      const origSrcs = imgs.map((img) => img.src);
+      imgs.forEach((img) => {
+        if (img.src.startsWith('http')) {
+          img.src = `/api/image-proxy?url=${encodeURIComponent(img.src)}`;
+        }
+      });
+      // 画像の再読み込みを待つ
+      await Promise.all(imgs.map((img) => new Promise<void>((resolve) => {
+        if (img.complete) { resolve(); return; }
+        img.onload = () => resolve();
+        img.onerror = () => resolve();
+      })));
+
+      const html2canvas = (await import('html2canvas')).default;
+      const canvas = await html2canvas(el, { useCORS: true, scale: 2, backgroundColor: '#f8fafc' });
       const a = document.createElement('a');
-      a.href = dataUrl;
+      a.href = canvas.toDataURL('image/png');
       a.download = 'draft.png';
       a.click();
+
+      // 元のsrcに戻す
+      imgs.forEach((img, i) => { img.src = origSrcs[i]; });
     } catch (e) { console.error(e); }
   }
 
