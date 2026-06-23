@@ -12,6 +12,7 @@ const NAV_LINKS = [
   { href: '/stats/player', label: '👤 個人成績' },
   { href: '/stats/overall', label: '🏆 総合成績' },
   { href: '/tournament/admin', label: '⚙️ 管理画面' },
+  { href: '/draft', label: '🃏 ドラフト' },
 ];
 
 export default function Navbar() {
