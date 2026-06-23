@@ -53,11 +53,11 @@ export default function DraftPage() {
     setSearchResults([]);
     try {
       const res = await fetch(
-        `https://db.ygoprodeck.com/api/v7/cardinfo.php?fname=${encodeURIComponent(searchQuery)}&language=ja`
+        `https://db.ygoprodeck.com/api/v7/cardinfo.php?fname=${encodeURIComponent(searchQuery)}`
       );
       if (!res.ok) throw new Error('Not found');
       const json: YgoApiResponse = await res.json();
-      const cards = json.data?.slice(0, 20) ?? [];
+      const cards = json.data?.slice(0, 100) ?? [];
       if (cards.length === 0) {
         setSearchError('該当するカードが見つかりませんでした');
       } else {
