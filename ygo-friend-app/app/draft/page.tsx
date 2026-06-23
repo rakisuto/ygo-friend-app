@@ -16,6 +16,7 @@ export default function DraftPage() {
   const [searchResults, setSearchResults] = useState<YgoCard[]>([]);
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState('');
+  const [modalOpen, setModalOpen] = useState(false);
   const [selectedCard, setSelectedCard] = useState<YgoCard | null>(null);
   const [editingPlayer, setEditingPlayer] = useState<number | null>(null);
   const [editingName, setEditingName] = useState('');
@@ -52,18 +53,27 @@ export default function DraftPage() {
     setSearchResults([]);
     try {
       const res = await fetch(
-        `https://db.ygoprodeck.com/api/v7/cardinfo.php?fname=${encodeURIComponent(searchQuery)}`
+        `https://db.ygoprodeck.com/api/v7/cardinfo.php?fname=${encodeURIComponent(searchQuery)}&language=ja`
       );
       if (!res.ok) throw new Error('Not found');
       const json: YgoApiResponse = await res.json();
       const cards = json.data?.slice(0, 20) ?? [];
-      if (cards.length === 0) setSearchError('該当するカードが見つかりませんでした');
-      setSearchResults(cards);
+      if (cards.length === 0) {
+        setSearchError('該当するカードが見つかりませんでした');
+      } else {
+        setSearchResults(cards);
+        setModalOpen(true);
+      }
     } catch {
       setSearchError('該当するカードが見つかりませんでした');
     } finally {
       setSearching(false);
     }
+  }
+
+  function handleSelectCard(card: YgoCard) {
+    setSelectedCard(card);
+    setModalOpen(false);
   }
 
   function handleAddToPlayer(playerIndex: number) {
@@ -129,78 +139,93 @@ export default function DraftPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-4">
-      <h1 className="text-2xl font-bold mb-6 text-center">ドラフト管理</h1>
-
-      {/* Search */}
-      <div className="mb-4 flex gap-2">
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-          placeholder="テーマ名を入力..."
-          className="flex-1 px-3 py-2 rounded bg-gray-800 border border-gray-600 text-white focus:outline-none focus:border-blue-400"
-        />
-        <button
-          onClick={handleSearch}
-          disabled={searching}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded font-semibold disabled:opacity-50"
-        >
-          {searching ? '検索中...' : '検索'}
-        </button>
+    <main className="page-main">
+      {/* Title */}
+      <div style={{ marginBottom: '1.5rem' }}>
+        <h1 className="reisho" style={{ fontSize: 'clamp(1.4rem, 5vw, 1.8rem)', fontWeight: 'bold', color: '#1e293b' }}>
+          🃏 ドラフト管理
+        </h1>
       </div>
 
-      {/* Search results */}
-      {searchError && <p className="text-yellow-400 mb-4">{searchError}</p>}
-      {searchResults.length > 0 && (
-        <div className="mb-6">
-          <p className="text-sm text-gray-400 mb-2">
-            {selectedCard
-              ? `選択中: ${selectedCard.name} — プレイヤー枠をクリックして追加`
-              : 'カードをクリックして選択'}
-          </p>
-          <div className="grid grid-cols-5 sm:grid-cols-8 md:grid-cols-10 gap-2">
-            {searchResults.map((card) => (
-              <div
-                key={card.id}
-                onClick={() => setSelectedCard(selectedCard?.id === card.id ? null : card)}
-                className={`cursor-pointer rounded overflow-hidden border-2 transition-all ${
-                  selectedCard?.id === card.id
-                    ? 'border-blue-400 scale-105'
-                    : 'border-transparent hover:border-gray-500'
-                }`}
-                title={card.name}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={getImageUrl(card)}
-                  alt={card.name}
-                  className="w-full h-auto"
-                  loading="lazy"
-                />
-              </div>
-            ))}
-          </div>
+      {/* Search card */}
+      <div style={{
+        background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0',
+        boxShadow: '0 1px 4px rgba(0,0,0,0.06)', padding: '20px',
+        marginBottom: '24px',
+      }}>
+        <p style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px' }}>
+          🔍 テーマ検索
+        </p>
+        <div style={{ display: 'flex', gap: '8px' }}>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            placeholder="カード名・テーマ名を入力..."
+            style={{
+              flex: 1, padding: '10px 14px', borderRadius: '8px',
+              border: '1px solid #cbd5e1', fontSize: '1rem',
+              outline: 'none', color: '#1e293b',
+            }}
+          />
+          <button
+            onClick={handleSearch}
+            disabled={searching}
+            style={{
+              padding: '10px 20px', borderRadius: '8px', border: 'none',
+              background: searching ? '#94a3b8' : '#2563eb', color: '#fff',
+              fontWeight: 600, fontSize: '0.9375rem', cursor: searching ? 'not-allowed' : 'pointer',
+              transition: 'background 0.15s',
+            }}
+          >
+            {searching ? '検索中...' : '検索'}
+          </button>
         </div>
-      )}
+        {searchError && (
+          <p style={{ color: '#f59e0b', fontSize: '0.875rem', marginTop: '8px' }}>{searchError}</p>
+        )}
+        {selectedCard && (
+          <div style={{
+            marginTop: '12px', display: 'flex', alignItems: 'center', gap: '10px',
+            padding: '10px 14px', background: '#eff6ff', borderRadius: '8px', border: '1px solid #bfdbfe',
+          }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={getImageUrl(selectedCard)} alt={selectedCard.name} style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '4px' }} />
+            <span style={{ fontSize: '0.9375rem', color: '#1d4ed8', fontWeight: 600 }}>{selectedCard.name}</span>
+            <span style={{ fontSize: '0.8125rem', color: '#64748b', marginLeft: 'auto' }}>↓ プレイヤー枠をクリックして追加</span>
+            <button onClick={() => setSelectedCard(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '1rem' }}>✕</button>
+          </div>
+        )}
+      </div>
 
       {/* Player area */}
-      <div ref={playerAreaRef} className="bg-gray-800 rounded-xl p-4 mb-4">
-        <h2 className="text-center text-lg font-semibold mb-4 text-gray-300">プレイヤーエリア</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div style={{
+        background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0',
+        boxShadow: '0 1px 4px rgba(0,0,0,0.06)', padding: '20px',
+        marginBottom: '24px',
+      }}>
+        <p style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '16px' }}>
+          👥 プレイヤーエリア
+        </p>
+        <div ref={playerAreaRef} style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
           {state.players.map((player: Player, pi: number) => (
             <div
               key={pi}
               onClick={() => selectedCard && handleAddToPlayer(pi)}
-              className={`bg-gray-700 rounded-lg p-3 min-h-40 flex flex-col ${
-                selectedCard ? 'cursor-pointer ring-2 ring-blue-400 hover:ring-blue-300' : ''
-              }`}
+              style={{
+                background: selectedCard ? '#f0f9ff' : '#f8fafc',
+                border: selectedCard ? '2px dashed #3b82f6' : '1px solid #e2e8f0',
+                borderRadius: '10px', padding: '12px',
+                minHeight: '160px', display: 'flex', flexDirection: 'column',
+                cursor: selectedCard ? 'pointer' : 'default',
+                transition: 'border 0.15s, background 0.15s',
+              }}
             >
               {/* Player name */}
-              <div className="mb-3 text-center">
+              <div style={{ marginBottom: '10px', textAlign: 'center' }}>
                 {editingPlayer === pi ? (
-                  <div className="flex gap-1">
+                  <div style={{ display: 'flex', gap: '4px' }}>
                     <input
                       autoFocus
                       value={editingName}
@@ -210,11 +235,18 @@ export default function DraftPage() {
                         if (e.key === 'Escape') setEditingPlayer(null);
                       }}
                       onClick={(e) => e.stopPropagation()}
-                      className="flex-1 px-2 py-1 rounded bg-gray-600 text-white text-sm focus:outline-none"
+                      style={{
+                        flex: 1, padding: '4px 8px', borderRadius: '6px',
+                        border: '1px solid #93c5fd', fontSize: '0.875rem',
+                        outline: 'none',
+                      }}
                     />
                     <button
                       onClick={(e) => { e.stopPropagation(); handleSaveName(pi); }}
-                      className="px-2 py-1 bg-blue-600 rounded text-xs"
+                      style={{
+                        padding: '4px 8px', borderRadius: '6px', border: 'none',
+                        background: '#2563eb', color: '#fff', fontSize: '0.75rem', cursor: 'pointer',
+                      }}
                     >
                       OK
                     </button>
@@ -222,7 +254,11 @@ export default function DraftPage() {
                 ) : (
                   <span
                     onClick={(e) => { e.stopPropagation(); handleStartEditName(pi, player.name); }}
-                    className="font-bold text-sm cursor-pointer hover:text-blue-300 border-b border-dashed border-gray-500"
+                    style={{
+                      fontWeight: 700, fontSize: '0.9375rem', color: '#1e293b',
+                      borderBottom: '2px dashed #cbd5e1', paddingBottom: '2px',
+                      cursor: 'text',
+                    }}
                     title="クリックで編集"
                   >
                     {player.name}
@@ -231,26 +267,44 @@ export default function DraftPage() {
               </div>
 
               {/* Themes */}
-              <div className="flex flex-col gap-2 flex-1">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
                 {player.themes.map((theme: Theme, ti: number) => (
-                  <div key={ti} className="relative group">
+                  <div key={ti} style={{ position: 'relative' }}
+                    onMouseEnter={(e) => {
+                      const btn = e.currentTarget.querySelector('button') as HTMLButtonElement | null;
+                      if (btn) btn.style.opacity = '1';
+                    }}
+                    onMouseLeave={(e) => {
+                      const btn = e.currentTarget.querySelector('button') as HTMLButtonElement | null;
+                      if (btn) btn.style.opacity = '0';
+                    }}
+                  >
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={theme.imageUrl}
                       alt={theme.cardName}
-                      className="w-full h-auto rounded"
+                      style={{ width: '100%', borderRadius: '6px', display: 'block' }}
                       title={theme.cardName}
                     />
                     <button
                       onClick={(e) => { e.stopPropagation(); handleRemoveTheme(pi, ti); }}
-                      className="absolute top-0 right-0 bg-red-600 hover:bg-red-700 text-white rounded-full w-5 h-5 text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                      style={{
+                        position: 'absolute', top: '4px', right: '4px',
+                        background: '#ef4444', color: '#fff', border: 'none',
+                        borderRadius: '50%', width: '20px', height: '20px',
+                        fontSize: '0.75rem', cursor: 'pointer',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        opacity: 0, transition: 'opacity 0.15s',
+                      }}
                     >
                       ×
                     </button>
                   </div>
                 ))}
                 {player.themes.length === 0 && (
-                  <p className="text-xs text-gray-500 text-center mt-auto">テーマなし</p>
+                  <p style={{ fontSize: '0.75rem', color: '#94a3b8', textAlign: 'center', margin: 'auto 0' }}>
+                    {selectedCard ? 'クリックして追加' : 'テーマなし'}
+                  </p>
                 )}
               </div>
             </div>
@@ -259,24 +313,117 @@ export default function DraftPage() {
       </div>
 
       {/* Actions */}
-      <div className="flex justify-center gap-4">
+      <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginBottom: '8px' }}>
         <button
           onClick={handleSaveImage}
-          className="px-6 py-2 bg-green-600 hover:bg-green-700 rounded font-semibold"
+          style={{
+            padding: '10px 24px', borderRadius: '8px', border: 'none',
+            background: '#16a34a', color: '#fff', fontWeight: 600,
+            fontSize: '0.9375rem', cursor: 'pointer',
+          }}
         >
-          画像として保存
+          📷 画像として保存
         </button>
         <button
           onClick={handleReset}
-          className="px-6 py-2 bg-red-700 hover:bg-red-800 rounded font-semibold"
+          style={{
+            padding: '10px 24px', borderRadius: '8px', border: '1px solid #fca5a5',
+            background: '#fff', color: '#ef4444', fontWeight: 600,
+            fontSize: '0.9375rem', cursor: 'pointer',
+          }}
         >
-          リセット
+          🗑️ リセット
         </button>
       </div>
-
       {saving && (
-        <p className="text-center text-xs text-gray-500 mt-2">保存中...</p>
+        <p style={{ textAlign: 'center', fontSize: '0.75rem', color: '#94a3b8' }}>保存中...</p>
       )}
-    </div>
+
+      {/* Modal */}
+      {modalOpen && (
+        <div
+          onClick={() => setModalOpen(false)}
+          style={{
+            position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.5)',
+            zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center',
+            backdropFilter: 'blur(2px)',
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: '#fff', borderRadius: '14px', padding: '24px',
+              width: 'min(92vw, 680px)', boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+              display: 'flex', flexDirection: 'column', gap: '16px',
+            }}
+          >
+            {/* Modal header */}
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <p style={{ fontWeight: 700, color: '#1e293b', fontSize: '1rem', margin: 0 }}>
+                検索結果 <span style={{ color: '#64748b', fontWeight: 400, fontSize: '0.875rem' }}>({searchResults.length}件)</span>
+              </p>
+              <button
+                onClick={() => setModalOpen(false)}
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  color: '#94a3b8', fontSize: '1.25rem', lineHeight: 1,
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Scrollable card row */}
+            <div style={{
+              display: 'flex', gap: '10px',
+              overflowX: 'auto', paddingBottom: '8px',
+              WebkitOverflowScrolling: 'touch',
+            }}>
+              {searchResults.map((card) => (
+                <div
+                  key={card.id}
+                  onClick={() => handleSelectCard(card)}
+                  title={card.name}
+                  style={{
+                    flexShrink: 0, cursor: 'pointer',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px',
+                    padding: '6px', borderRadius: '8px', border: '2px solid #e2e8f0',
+                    transition: 'border-color 0.15s, transform 0.15s',
+                    width: '120px',
+                  }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLDivElement).style.borderColor = '#3b82f6';
+                    (e.currentTarget as HTMLDivElement).style.transform = 'scale(1.04)';
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLDivElement).style.borderColor = '#e2e8f0';
+                    (e.currentTarget as HTMLDivElement).style.transform = 'scale(1)';
+                  }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={getImageUrl(card)}
+                    alt={card.name}
+                    style={{ width: '120px', height: '120px', objectFit: 'cover', borderRadius: '4px' }}
+                    loading="lazy"
+                  />
+                  <span style={{
+                    fontSize: '0.6875rem', color: '#475569', textAlign: 'center',
+                    lineHeight: 1.3, wordBreak: 'break-all',
+                    display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                  }}>
+                    {card.name}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            <p style={{ fontSize: '0.8125rem', color: '#94a3b8', textAlign: 'center', margin: 0 }}>
+              カードをクリックして選択
+            </p>
+          </div>
+        </div>
+      )}
+    </main>
   );
 }
