@@ -14,6 +14,8 @@ export default function DraftSettingsPage() {
   const [searchResults, setSearchResults] = useState<YgoCard[]>([]);
   const [searchError, setSearchError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [editingNameIndex, setEditingNameIndex] = useState<number | null>(null);
+  const [editingNameValue, setEditingNameValue] = useState('');
 
   useEffect(() => {
     fetch('/api/draft/themes')
@@ -50,10 +52,8 @@ export default function DraftSettingsPage() {
 
   function handleSelectCard(card: YgoCard) {
     setModalOpen(false);
-    const already = themes.some((t) => t.cardId === card.id);
-    if (already) return;
-    const theme: Theme = { cardId: card.id, cardName: card.name, imageUrl: getImageUrl(card) };
-    persistThemes([...themes, theme]);
+    if (themes.some((t) => t.cardId === card.id)) return;
+    persistThemes([...themes, { cardId: card.id, cardName: card.name, imageUrl: getImageUrl(card) }]);
   }
 
   function handleDelete(index: number) {
@@ -66,6 +66,19 @@ export default function DraftSettingsPage() {
     if (swap < 0 || swap >= next.length) return;
     [next[index], next[swap]] = [next[swap], next[index]];
     persistThemes(next);
+  }
+
+  function handleStartEditName(index: number, current: string) {
+    setEditingNameIndex(index);
+    setEditingNameValue(current);
+  }
+
+  function handleSaveName(index: number) {
+    const trimmed = editingNameValue.trim();
+    if (!trimmed) { setEditingNameIndex(null); return; }
+    const next = themes.map((t, i) => i === index ? { ...t, cardName: trimmed } : t);
+    persistThemes(next);
+    setEditingNameIndex(null);
   }
 
   async function handleReset() {
@@ -106,19 +119,12 @@ export default function DraftSettingsPage() {
             onChange={(e) => setSearchQuery(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
             placeholder="カード名を入力..."
-            style={{
-              flex: 1, padding: '10px 14px', borderRadius: '8px',
-              border: '1px solid #cbd5e1', fontSize: '1rem', outline: 'none', color: '#1e293b',
-            }}
+            style={{ flex: 1, padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '1rem', outline: 'none', color: '#1e293b' }}
           />
           <button
             onClick={handleSearch}
             disabled={searching}
-            style={{
-              padding: '10px 20px', borderRadius: '8px', border: 'none',
-              background: searching ? '#94a3b8' : '#2563eb', color: '#fff',
-              fontWeight: 600, fontSize: '0.9375rem', cursor: searching ? 'not-allowed' : 'pointer',
-            }}
+            style={{ padding: '10px 20px', borderRadius: '8px', border: 'none', background: searching ? '#94a3b8' : '#2563eb', color: '#fff', fontWeight: 600, fontSize: '0.9375rem', cursor: searching ? 'not-allowed' : 'pointer' }}
           >
             {searching ? '検索中...' : '検索'}
           </button>
@@ -148,8 +154,7 @@ export default function DraftSettingsPage() {
                 key={theme.cardId}
                 style={{
                   display: 'flex', alignItems: 'center', gap: '12px',
-                  padding: '10px 12px', borderRadius: '8px', background: '#f8fafc',
-                  border: '1px solid #e2e8f0',
+                  padding: '10px 12px', borderRadius: '8px', background: '#f8fafc', border: '1px solid #e2e8f0',
                 }}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -158,18 +163,40 @@ export default function DraftSettingsPage() {
                   alt={theme.cardName}
                   style={{ width: '44px', height: '44px', objectFit: 'cover', borderRadius: '4px', flexShrink: 0 }}
                 />
-                <span style={{ flex: 1, fontSize: '0.9375rem', color: '#1e293b', fontWeight: 500 }}>
-                  {theme.cardName}
-                </span>
+
+                {/* Editable name */}
+                {editingNameIndex === i ? (
+                  <div style={{ flex: 1, display: 'flex', gap: '6px' }}>
+                    <input
+                      autoFocus
+                      value={editingNameValue}
+                      onChange={(e) => setEditingNameValue(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') handleSaveName(i);
+                        if (e.key === 'Escape') setEditingNameIndex(null);
+                      }}
+                      style={{ flex: 1, padding: '4px 8px', borderRadius: '6px', border: '1px solid #93c5fd', fontSize: '0.9375rem', outline: 'none', color: '#1e293b' }}
+                    />
+                    <button onClick={() => handleSaveName(i)} style={{ padding: '4px 10px', borderRadius: '6px', border: 'none', background: '#2563eb', color: '#fff', fontSize: '0.8125rem', cursor: 'pointer' }}>OK</button>
+                    <button onClick={() => setEditingNameIndex(null)} style={{ padding: '4px 10px', borderRadius: '6px', border: '1px solid #e2e8f0', background: '#fff', color: '#64748b', fontSize: '0.8125rem', cursor: 'pointer' }}>取消</button>
+                  </div>
+                ) : (
+                  <span
+                    onClick={() => handleStartEditName(i, theme.cardName)}
+                    style={{
+                      flex: 1, fontSize: '0.9375rem', color: '#1e293b', fontWeight: 500,
+                      borderBottom: '1px dashed #cbd5e1', paddingBottom: '1px', cursor: 'text',
+                    }}
+                    title="クリックで名称を編集"
+                  >
+                    {theme.cardName}
+                  </span>
+                )}
+
                 <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
                   <button onClick={() => handleMove(i, -1)} disabled={i === 0} style={{ ...btnBase, opacity: i === 0 ? 0.3 : 1 }}>↑</button>
                   <button onClick={() => handleMove(i, 1)} disabled={i === themes.length - 1} style={{ ...btnBase, opacity: i === themes.length - 1 ? 0.3 : 1 }}>↓</button>
-                  <button
-                    onClick={() => handleDelete(i)}
-                    style={{ ...btnBase, color: '#ef4444', borderColor: '#fca5a5' }}
-                  >
-                    削除
-                  </button>
+                  <button onClick={() => handleDelete(i)} style={{ ...btnBase, color: '#ef4444', borderColor: '#fca5a5' }}>削除</button>
                 </div>
               </div>
             ))}
@@ -180,10 +207,7 @@ export default function DraftSettingsPage() {
           <div style={{ marginTop: '16px', display: 'flex', justifyContent: 'flex-end' }}>
             <button
               onClick={handleReset}
-              style={{
-                padding: '8px 16px', borderRadius: '8px', border: '1px solid #fca5a5',
-                background: '#fff', color: '#ef4444', fontWeight: 600, fontSize: '0.875rem', cursor: 'pointer',
-              }}
+              style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid #fca5a5', background: '#fff', color: '#ef4444', fontWeight: 600, fontSize: '0.875rem', cursor: 'pointer' }}
             >
               🗑️ 候補リストをリセット
             </button>
@@ -191,7 +215,6 @@ export default function DraftSettingsPage() {
         )}
       </div>
 
-      {/* Modal */}
       {modalOpen && (
         <SearchModal
           results={searchResults}
