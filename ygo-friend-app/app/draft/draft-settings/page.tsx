@@ -210,6 +210,7 @@ export default function DraftSettingsPage() {
   const [editingNameIndex, setEditingNameIndex] = useState<number | null>(null);
   const [editingNameValue, setEditingNameValue] = useState('');
   const [banModalOpen, setBanModalOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
 
   useEffect(() => {
     fetch('/api/draft/themes').then(r => r.json()).then((d: Theme[]) => setThemes(d ?? [])).catch(() => {});
@@ -290,12 +291,35 @@ export default function DraftSettingsPage() {
       <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', padding: '20px', marginBottom: '24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
           <p style={{ fontSize: '0.75rem', fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>📋 候補リスト（{themes.length}件）</p>
-          {saving && <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>保存中...</span>}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {saving && <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>保存中...</span>}
+            {/* View toggle */}
+            {themes.length > 0 && (
+              <div style={{ display: 'flex', borderRadius: '8px', border: '1px solid #e2e8f0', overflow: 'hidden' }}>
+                {(['list', 'grid'] as const).map(mode => (
+                  <button
+                    key={mode}
+                    onClick={() => setViewMode(mode)}
+                    title={mode === 'list' ? 'リスト表示' : 'グリッド表示'}
+                    style={{
+                      padding: '5px 10px', border: 'none', cursor: 'pointer', fontSize: '0.875rem',
+                      background: viewMode === mode ? '#2563eb' : '#fff',
+                      color: viewMode === mode ? '#fff' : '#64748b',
+                      transition: 'background 0.15s, color 0.15s',
+                    }}
+                  >
+                    {mode === 'list' ? '☰' : '⊞'}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {themes.length === 0 ? (
           <p style={{ color: '#94a3b8', fontSize: '0.9375rem', textAlign: 'center', padding: '24px 0' }}>テーマがありません。検索して追加してください。</p>
-        ) : (
+        ) : viewMode === 'list' ? (
+          /* ── リスト表示 ── */
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {themes.map((theme, i) => (
               <div key={theme.cardId} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 12px', borderRadius: '8px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
@@ -320,6 +344,38 @@ export default function DraftSettingsPage() {
                   <button onClick={() => handleMove(i, -1)} disabled={i === 0} style={{ ...btnBase, opacity: i === 0 ? 0.3 : 1 }}>↑</button>
                   <button onClick={() => handleMove(i, 1)} disabled={i === themes.length - 1} style={{ ...btnBase, opacity: i === themes.length - 1 ? 0.3 : 1 }}>↓</button>
                   <button onClick={() => handleDelete(i)} style={{ ...btnBase, color: '#ef4444', borderColor: '#fca5a5' }}>削除</button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          /* ── グリッド表示 ── */
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '12px' }}>
+            {themes.map((theme, i) => (
+              <div key={theme.cardId} style={{ display: 'flex', flexDirection: 'column', gap: '6px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '8px', alignItems: 'center' }}>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={theme.imageUrl} alt={theme.cardName} style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '6px' }} />
+                {editingNameIndex === i ? (
+                  <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <input autoFocus value={editingNameValue} onChange={e => setEditingNameValue(e.target.value)}
+                      onKeyDown={e => { if (e.key === 'Enter') handleSaveName(i); if (e.key === 'Escape') setEditingNameIndex(null); }}
+                      style={{ width: '100%', padding: '3px 6px', borderRadius: '5px', border: '1px solid #93c5fd', fontSize: '0.75rem', outline: 'none', boxSizing: 'border-box' }} />
+                    <div style={{ display: 'flex', gap: '3px' }}>
+                      <button onClick={() => handleSaveName(i)} style={{ flex: 1, padding: '3px', borderRadius: '5px', border: 'none', background: '#2563eb', color: '#fff', fontSize: '0.6875rem', cursor: 'pointer' }}>OK</button>
+                      <button onClick={() => setEditingNameIndex(null)} style={{ flex: 1, padding: '3px', borderRadius: '5px', border: '1px solid #e2e8f0', background: '#fff', color: '#64748b', fontSize: '0.6875rem', cursor: 'pointer' }}>✕</button>
+                    </div>
+                  </div>
+                ) : (
+                  <span onClick={() => { setEditingNameIndex(i); setEditingNameValue(theme.cardName); }}
+                    style={{ fontSize: '0.75rem', color: '#374151', fontWeight: 500, textAlign: 'center', lineHeight: 1.3, wordBreak: 'break-all', cursor: 'text', borderBottom: '1px dashed #cbd5e1', width: '100%', textAlignLast: 'center' }}
+                    title="クリックで名称を編集">
+                    {theme.cardName}
+                  </span>
+                )}
+                <div style={{ display: 'flex', gap: '3px', width: '100%' }}>
+                  <button onClick={() => handleMove(i, -1)} disabled={i === 0} style={{ ...btnBase, flex: 1, padding: '3px', opacity: i === 0 ? 0.3 : 1, textAlign: 'center' }}>↑</button>
+                  <button onClick={() => handleMove(i, 1)} disabled={i === themes.length - 1} style={{ ...btnBase, flex: 1, padding: '3px', opacity: i === themes.length - 1 ? 0.3 : 1, textAlign: 'center' }}>↓</button>
+                  <button onClick={() => handleDelete(i)} style={{ ...btnBase, flex: 1, padding: '3px', color: '#ef4444', borderColor: '#fca5a5', textAlign: 'center' }}>✕</button>
                 </div>
               </div>
             ))}
