@@ -416,6 +416,8 @@ export default function DraftPage() {
                     boxShadow: isSelected ? '0 0 0 2px #bfdbfe' : 'none',
                     transform: isSelected ? 'scale(1.08)' : 'scale(1)',
                     transition: 'all 0.15s',
+                    display: 'flex', flexDirection: 'column', alignItems: 'center',
+                    background: '#f8fafc', paddingBottom: '6px',
                   }}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -435,8 +437,16 @@ export default function DraftPage() {
                     </div>
                   )}
                   {isAssigned && !isBanned && (
-                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(148,163,184,0.4)', borderRadius: '6px' }} />
+                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, width: '80px', height: '80px', background: 'rgba(148,163,184,0.4)', borderRadius: '6px' }} />
                   )}
+                  <span style={{
+                    fontSize: '0.6875rem', color: isDisabled ? '#94a3b8' : '#374151',
+                    textAlign: 'center', lineHeight: 1.3, wordBreak: 'break-all',
+                    padding: '0 4px', maxWidth: '80px',
+                    display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
+                  }}>
+                    {theme.cardName}
+                  </span>
                 </div>
               );
             })}
