@@ -132,6 +132,91 @@ function DraftSetupModal({
   );
 }
 
+/* ─── テーマ確認モーダル ─── */
+function ThemeConfirmModal({
+  theme,
+  playerName,
+  round,
+  totalRounds,
+  isSession,
+  players,
+  onConfirm,
+  onCancel,
+}: {
+  theme: { imageUrl: string; cardName: string };
+  playerName: string;
+  round: number;
+  totalRounds: number;
+  isSession: boolean;
+  players: { name: string }[];
+  onConfirm: (playerIdx?: number) => void;
+  onCancel: () => void;
+}) {
+  return (
+    <div
+      onClick={onCancel}
+      style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.55)', zIndex: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(3px)' }}
+    >
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{ background: '#fff', borderRadius: '16px', padding: '32px 28px', width: 'min(92vw, 360px)', boxShadow: '0 24px 64px rgba(0,0,0,0.25)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}
+      >
+        {/* Large image */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={theme.imageUrl} alt={theme.cardName} style={{ width: '160px', height: '160px', objectFit: 'cover', borderRadius: '12px', boxShadow: '0 4px 16px rgba(0,0,0,0.15)' }} />
+
+        {/* Info */}
+        <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          {isSession && (
+            <p style={{ margin: 0, fontSize: '0.875rem', color: '#64748b', fontWeight: 600 }}>
+              {playerName}・{round}巡目
+            </p>
+          )}
+          <p style={{ margin: 0, fontSize: '0.8125rem', color: '#94a3b8' }}>選択テーマ</p>
+          <p style={{ margin: 0, fontSize: '1.125rem', fontWeight: 700, color: '#1e293b' }}>{theme.cardName}</p>
+        </div>
+
+        <p style={{ margin: 0, fontSize: '0.9375rem', color: '#374151', fontWeight: 600 }}>このテーマでよいですか？</p>
+
+        {/* Session mode: はい/いいえ */}
+        {isSession ? (
+          <div style={{ display: 'flex', gap: '12px', width: '100%' }}>
+            <button
+              onClick={onCancel}
+              style={{ flex: 1, padding: '10px', borderRadius: '10px', border: '1px solid #e2e8f0', background: '#f8fafc', color: '#475569', fontWeight: 600, fontSize: '0.9375rem', cursor: 'pointer' }}
+            >
+              いいえ
+            </button>
+            <button
+              onClick={() => onConfirm()}
+              style={{ flex: 1, padding: '10px', borderRadius: '10px', border: 'none', background: '#2563eb', color: '#fff', fontWeight: 700, fontSize: '0.9375rem', cursor: 'pointer' }}
+            >
+              はい
+            </button>
+          </div>
+        ) : (
+          /* Non-session mode: pick player */
+          <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <p style={{ margin: 0, fontSize: '0.8125rem', color: '#64748b', textAlign: 'center' }}>追加するプレイヤーを選択</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {players.map((p, i) => (
+                <button
+                  key={i}
+                  onClick={() => onConfirm(i)}
+                  style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', background: '#f8fafc', color: '#1e293b', fontWeight: 600, fontSize: '0.9375rem', cursor: 'pointer', textAlign: 'left' }}
+                >
+                  {p.name}
+                </button>
+              ))}
+            </div>
+            <button onClick={onCancel} style={{ padding: '8px', borderRadius: '8px', border: 'none', background: 'none', color: '#94a3b8', fontSize: '0.875rem', cursor: 'pointer' }}>キャンセル</button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* ─── メインページ ─── */
 export default function DraftPage() {
   const [candidateThemes, setCandidateThemes] = useState<Theme[]>([]);
@@ -145,6 +230,7 @@ export default function DraftPage() {
   const [saving, setSaving] = useState(false);
   const [setupModalOpen, setSetupModalOpen] = useState(false);
   const [isDone, setIsDone] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
   const playerAreaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -219,7 +305,19 @@ export default function DraftPage() {
   function handleSelectCandidate(theme: Theme) {
     if (assignedIds.has(theme.cardId)) return;
     if (isSessionActive && bannedIds.has(theme.cardId)) { showToast('このテーマは現在のプレイヤーのBANルールにより選択できません'); return; }
-    setSelectedTheme(prev => prev?.cardId === theme.cardId ? null : theme);
+    setSelectedTheme(theme);
+    setConfirmOpen(true);
+  }
+
+  function handleConfirm(playerIdx?: number) {
+    setConfirmOpen(false);
+    const target = isSessionActive ? currentPlayerIdx : (playerIdx ?? 0);
+    handleAddToPlayer(target);
+  }
+
+  function handleCancelConfirm() {
+    setConfirmOpen(false);
+    setSelectedTheme(null);
   }
 
   async function handleAddToPlayer(playerIndex: number) {
@@ -453,17 +551,6 @@ export default function DraftPage() {
           </div>
         )}
 
-        {selectedTheme && (
-          <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px', background: '#eff6ff', borderRadius: '8px', border: '1px solid #bfdbfe' }}>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={selectedTheme.imageUrl} alt={selectedTheme.cardName} style={{ width: '36px', height: '36px', objectFit: 'cover', borderRadius: '4px' }} />
-            <span style={{ fontSize: '0.9375rem', color: '#1d4ed8', fontWeight: 600 }}>{selectedTheme.cardName}</span>
-            <span style={{ fontSize: '0.8125rem', color: '#64748b', marginLeft: 'auto' }}>
-              {isSessionActive ? `「追加 ▼」で ${session!.players[currentPlayerIdx]?.name} に追加` : '「追加 ▼」でプレイヤーに割り当て'}
-            </span>
-            <button onClick={() => setSelectedTheme(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', fontSize: '1rem' }}>✕</button>
-          </div>
-        )}
       </div>
 
       {/* Player area */}
@@ -545,17 +632,6 @@ export default function DraftPage() {
                   )}
                 </div>
 
-                {/* Add button */}
-                <button onClick={() => handleAddToPlayer(pi)}
-                  style={{
-                    marginTop: '10px', padding: '6px', borderRadius: '6px',
-                    border: `1px dashed ${isCurrentTurn ? '#3b82f6' : '#93c5fd'}`,
-                    background: selectedTheme ? (isCurrentTurn ? '#dbeafe' : '#eff6ff') : '#f1f5f9',
-                    color: selectedTheme ? '#1d4ed8' : '#94a3b8',
-                    fontSize: '0.8125rem', fontWeight: 600, cursor: 'pointer', transition: 'all 0.15s',
-                  }}>
-                  追加 ▼
-                </button>
               </div>
             );
           })}
@@ -578,6 +654,20 @@ export default function DraftPage() {
         <div style={{ position: 'fixed', bottom: '24px', left: '50%', transform: 'translateX(-50%)', background: '#1e293b', color: '#fff', padding: '10px 20px', borderRadius: '8px', fontSize: '0.9375rem', zIndex: 1000, boxShadow: '0 4px 12px rgba(0,0,0,0.2)', whiteSpace: 'nowrap' }}>
           {toast}
         </div>
+      )}
+
+      {/* Theme confirm modal */}
+      {confirmOpen && selectedTheme && (
+        <ThemeConfirmModal
+          theme={selectedTheme}
+          playerName={isSessionActive ? session!.players[currentPlayerIdx]?.name : ''}
+          round={currentRound}
+          totalRounds={totalRounds}
+          isSession={isSessionActive}
+          players={displayPlayers}
+          onConfirm={handleConfirm}
+          onCancel={handleCancelConfirm}
+        />
       )}
 
       {/* Setup modal */}
