@@ -10,7 +10,7 @@ const SITE_EMOJI = '🎮';
 const NAV_LINKS = [
   { href: '/', label: '🏠 TOP' },
   { href: '/tournamentlist', label: '📋 大会一覧' },
-  { href: '/admin', label: '⚙️ 管理者画面' },
+  { href: '/tournament/admin', label: '⚙️ 管理者画面' },
   { href: 'https://www.masterduelmeta.com/', label: '🌐 MasterDuelMeta', external: true },
 ];
 
@@ -32,7 +32,7 @@ export default function Navbar() {
         }}
       >
         <Link
-          href="/"
+          href="/tournament"
           style={{
             textDecoration: 'none', color: '#1e293b', fontWeight: 700,
             fontSize: 'clamp(0.75rem, 3vw, 0.9375rem)',
