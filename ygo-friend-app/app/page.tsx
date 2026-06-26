@@ -30,7 +30,7 @@ export default function TopPage() {
         </h1>
 
         <img
-          src="/img/master-duel-logo.png"
+          src="/img/logo.png"
           alt="Yu-Gi-Oh! Master Duel"
           style={{
             width: '100%',
