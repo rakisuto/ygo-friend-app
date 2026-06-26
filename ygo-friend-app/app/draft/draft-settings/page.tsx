@@ -198,8 +198,60 @@ function BanRulesModal({
   );
 }
 
+/* ─── PINモーダル ─── */
+function PinModal({ onVerified }: { onVerified: (pin: string) => void }) {
+  const [input, setInput] = useState('');
+  const [error, setError] = useState('');
+  const [checking, setChecking] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!input.trim()) return;
+    setChecking(true);
+    setError('');
+    const res = await fetch('/api/auth/verify', {
+      method: 'POST',
+      headers: { 'x-admin-pin': input.trim() },
+    });
+    setChecking(false);
+    if (res.ok) {
+      onVerified(input.trim());
+    } else {
+      setError('PINが正しくありません');
+      setInput('');
+    }
+  }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.55)', zIndex: 500, display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(2px)' }}>
+      <div style={{ background: '#fff', borderRadius: '16px', padding: '32px 28px', width: 'min(92vw, 360px)', boxShadow: '0 24px 64px rgba(0,0,0,0.25)' }}>
+        <h2 style={{ fontWeight: 700, fontSize: '1.125rem', color: '#1e293b', marginBottom: '20px' }}>🔐 管理者PIN</h2>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <input
+            type="password"
+            value={input}
+            onChange={e => setInput(e.target.value)}
+            placeholder="PINを入力"
+            autoFocus
+            style={{ padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', fontSize: '1rem', outline: 'none' }}
+          />
+          {error && <p style={{ color: '#dc2626', fontSize: '0.875rem', margin: 0 }}>{error}</p>}
+          <button
+            type="submit"
+            disabled={checking || !input.trim()}
+            style={{ padding: '10px', background: checking ? '#93c5fd' : '#2563eb', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 700, fontSize: '1rem', cursor: checking ? 'not-allowed' : 'pointer' }}
+          >
+            {checking ? '確認中...' : '認証'}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 /* ─── メインページ ─── */
 export default function DraftSettingsPage() {
+  const [pin, setPin] = useState<string | null>(null);
   const [themes, setThemes] = useState<Theme[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [searching, setSearching] = useState(false);
@@ -408,6 +460,9 @@ export default function DraftSettingsPage() {
       {/* Modals */}
       {modalOpen && <SearchModal results={searchResults} error={searchError} onSelect={handleSelectCard} onClose={() => setModalOpen(false)} />}
       {banModalOpen && <BanRulesModal themes={themes} onClose={() => setBanModalOpen(false)} />}
+
+      {/* PIN gate */}
+      {pin === null && <PinModal onVerified={p => setPin(p)} />}
     </main>
   );
 }
