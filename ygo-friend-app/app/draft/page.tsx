@@ -436,7 +436,7 @@ export default function DraftPage() {
   const displayPlayers = state.players;
 
   return (
-    <div style={{ padding: '2rem 1.5rem' }}>
+    <div style={{ padding: '2rem 2rem', maxWidth: '1600px', margin: '0 auto' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
         <h1 className="reisho" style={{ fontSize: 'clamp(1.4rem, 5vw, 1.8rem)', fontWeight: 'bold', color: '#1e293b' }}>🎴 ドラフト</h1>
@@ -523,7 +523,7 @@ export default function DraftPage() {
                     src={theme.imageUrl}
                     alt={theme.cardName}
                     style={{
-                      width: '80px', height: '80px', objectFit: 'cover', display: 'block',
+                      width: '120px', height: '120px', objectFit: 'cover', display: 'block',
                       opacity: isDisabled ? 0.25 : 1,
                       filter: isDisabled ? 'grayscale(80%)' : 'none',
                       transition: 'opacity 0.2s, filter 0.2s',
@@ -531,16 +531,16 @@ export default function DraftPage() {
                   />
                   {isBanned && (
                     <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(239,68,68,0.15)', borderRadius: '6px' }}>
-                      <span style={{ fontSize: '1.5rem' }}>🚫</span>
+                      <span style={{ fontSize: '2rem' }}>🚫</span>
                     </div>
                   )}
                   {isAssigned && !isBanned && (
-                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, width: '80px', height: '80px', background: 'rgba(148,163,184,0.4)', borderRadius: '6px' }} />
+                    <div style={{ position: 'absolute', top: 0, left: 0, right: 0, width: '120px', height: '120px', background: 'rgba(148,163,184,0.4)', borderRadius: '6px' }} />
                   )}
                   <span style={{
-                    fontSize: '0.6875rem', color: isDisabled ? '#94a3b8' : '#374151',
+                    fontSize: '0.875rem', color: isDisabled ? '#94a3b8' : '#374151',
                     textAlign: 'center', lineHeight: 1.3, wordBreak: 'break-all',
-                    padding: '0 4px', maxWidth: '80px',
+                    padding: '0 4px', maxWidth: '120px',
                     display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden',
                   }}>
                     {theme.cardName}
@@ -576,7 +576,7 @@ export default function DraftPage() {
                 {/* Player name */}
                 <div style={{ marginBottom: '10px', textAlign: 'center' }}>
                   {isCurrentTurn && (
-                    <div style={{ fontSize: '0.6875rem', color: '#2563eb', fontWeight: 700, marginBottom: '4px' }}>▶ 選択中</div>
+                    <div style={{ fontSize: '0.875rem', color: '#2563eb', fontWeight: 700, marginBottom: '4px' }}>▶ 選択中</div>
                   )}
                   {editingPlayer === pi ? (
                     <div style={{ display: 'flex', gap: '4px' }}>
@@ -587,14 +587,14 @@ export default function DraftPage() {
                     </div>
                   ) : (
                     <span onClick={() => { setEditingPlayer(pi); setEditingName(player.name); }}
-                      style={{ fontWeight: 700, fontSize: '0.9375rem', color: '#1e293b', borderBottom: '2px dashed #cbd5e1', paddingBottom: '2px', cursor: 'text' }}
+                      style={{ fontWeight: 700, fontSize: '1.125rem', color: '#1e293b', borderBottom: '2px dashed #cbd5e1', paddingBottom: '2px', cursor: 'text' }}
                       title="クリックで編集">
                       {player.name}
                     </span>
                   )}
                   {/* BAN rule badge */}
                   {isSessionActive && session!.players[pi]?.banRuleId && (
-                    <div style={{ fontSize: '0.6875rem', color: '#dc2626', marginTop: '4px' }}>
+                    <div style={{ fontSize: '0.875rem', color: '#dc2626', marginTop: '4px' }}>
                       🚫 {banRules.find(r => r.id === session!.players[pi].banRuleId)?.name ?? 'BANあり'}
                     </div>
                   )}
@@ -616,9 +616,9 @@ export default function DraftPage() {
                     >
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={theme.imageUrl} alt={theme.cardName}
-                        style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '6px', display: 'block' }}
+                        style={{ width: '120px', height: '120px', objectFit: 'cover', borderRadius: '6px', display: 'block' }}
                         title={theme.cardName} />
-                      <span style={{ fontSize: '0.6875rem', color: '#475569', textAlign: 'center', lineHeight: 1.3, wordBreak: 'break-all', maxWidth: '80px' }}>
+                      <span style={{ fontSize: '0.875rem', color: '#475569', textAlign: 'center', lineHeight: 1.3, wordBreak: 'break-all', maxWidth: '120px' }}>
                         {theme.cardName}
                       </span>
                       <button onClick={() => handleRemoveTheme(pi, ti)}

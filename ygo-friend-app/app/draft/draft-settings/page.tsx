@@ -268,7 +268,7 @@ export default function DraftSettingsPage() {
   const btnBase: React.CSSProperties = { padding: '4px 10px', borderRadius: '6px', border: '1px solid #e2e8f0', background: '#fff', cursor: 'pointer', fontSize: '0.8125rem', color: '#475569' };
 
   return (
-    <main className="page-main">
+    <main className="page-main" style={{ maxWidth: '1600px' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
         <h1 className="reisho" style={{ fontSize: 'clamp(1.4rem, 5vw, 1.8rem)', fontWeight: 'bold', color: '#1e293b' }}>🔧 ドラフト設定</h1>
         <Link href="/draft" style={{ fontSize: '0.875rem', color: '#2563eb', textDecoration: 'none' }}>← ドラフトに戻る</Link>
@@ -324,7 +324,7 @@ export default function DraftSettingsPage() {
             {themes.map((theme, i) => (
               <div key={theme.cardId} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '10px 12px', borderRadius: '8px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={theme.imageUrl} alt={theme.cardName} style={{ width: '44px', height: '44px', objectFit: 'cover', borderRadius: '4px', flexShrink: 0 }} />
+                <img src={theme.imageUrl} alt={theme.cardName} style={{ width: '72px', height: '72px', objectFit: 'cover', borderRadius: '4px', flexShrink: 0 }} />
                 {editingNameIndex === i ? (
                   <div style={{ flex: 1, display: 'flex', gap: '6px' }}>
                     <input autoFocus value={editingNameValue} onChange={e => setEditingNameValue(e.target.value)}
@@ -335,7 +335,7 @@ export default function DraftSettingsPage() {
                   </div>
                 ) : (
                   <span onClick={() => { setEditingNameIndex(i); setEditingNameValue(theme.cardName); }}
-                    style={{ flex: 1, fontSize: '0.9375rem', color: '#1e293b', fontWeight: 500, borderBottom: '1px dashed #cbd5e1', paddingBottom: '1px', cursor: 'text' }}
+                    style={{ flex: 1, fontSize: '1.0625rem', color: '#1e293b', fontWeight: 500, borderBottom: '1px dashed #cbd5e1', paddingBottom: '1px', cursor: 'text' }}
                     title="クリックで名称を編集">
                     {theme.cardName}
                   </span>
@@ -350,11 +350,11 @@ export default function DraftSettingsPage() {
           </div>
         ) : (
           /* ── グリッド表示 ── */
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))', gap: '12px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: '16px' }}>
             {themes.map((theme, i) => (
               <div key={theme.cardId} style={{ display: 'flex', flexDirection: 'column', gap: '6px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '10px', padding: '8px', alignItems: 'center' }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={theme.imageUrl} alt={theme.cardName} style={{ width: '80px', height: '80px', objectFit: 'cover', borderRadius: '6px' }} />
+                <img src={theme.imageUrl} alt={theme.cardName} style={{ width: '120px', height: '120px', objectFit: 'cover', borderRadius: '6px' }} />
                 {editingNameIndex === i ? (
                   <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <input autoFocus value={editingNameValue} onChange={e => setEditingNameValue(e.target.value)}
@@ -367,7 +367,7 @@ export default function DraftSettingsPage() {
                   </div>
                 ) : (
                   <span onClick={() => { setEditingNameIndex(i); setEditingNameValue(theme.cardName); }}
-                    style={{ fontSize: '0.75rem', color: '#374151', fontWeight: 500, textAlign: 'center', lineHeight: 1.3, wordBreak: 'break-all', cursor: 'text', borderBottom: '1px dashed #cbd5e1', width: '100%', textAlignLast: 'center' }}
+                    style={{ fontSize: '0.9375rem', color: '#374151', fontWeight: 500, textAlign: 'center', lineHeight: 1.3, wordBreak: 'break-all', cursor: 'text', borderBottom: '1px dashed #cbd5e1', width: '100%', textAlignLast: 'center' }}
                     title="クリックで名称を編集">
                     {theme.cardName}
                   </span>
