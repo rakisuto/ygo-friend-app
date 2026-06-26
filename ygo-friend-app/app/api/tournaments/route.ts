@@ -4,12 +4,35 @@ import type { Tournament } from '@/app/types/tournament';
 
 const KEY = 'tournaments:list';
 
+const DEFAULT_TOURNAMENTS: Tournament[] = [
+  {
+    id: '202605',
+    name: '2026年5月大会',
+    format: 'individual',
+    status: 'finished',
+    winner: null,
+    archiveUrl: '/tournamentlist/archive/202605',
+  },
+  {
+    id: '202607',
+    name: '2026年7月大会',
+    format: 'team',
+    status: 'upcoming',
+    winner: null,
+    archiveUrl: '/tournamentlist/archive/202607',
+  },
+];
+
 export async function GET() {
   try {
     const list = await kv.get<Tournament[]>(KEY);
-    return NextResponse.json(list ?? []);
+    if (!list) {
+      await kv.set(KEY, DEFAULT_TOURNAMENTS);
+      return NextResponse.json(DEFAULT_TOURNAMENTS);
+    }
+    return NextResponse.json(list);
   } catch {
-    return NextResponse.json([]);
+    return NextResponse.json(DEFAULT_TOURNAMENTS);
   }
 }
 
