@@ -86,7 +86,7 @@ function BanRulesModal({
     >
       <div
         onClick={e => e.stopPropagation()}
-        style={{ background: '#f8fafc', borderRadius: '16px', width: 'min(94vw, 640px)', maxHeight: '85vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', overflow: 'hidden' }}
+        style={{ background: '#f8fafc', borderRadius: '16px', width: 'min(96vw, 1200px)', maxHeight: '92vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.2)', overflow: 'hidden' }}
       >
         {/* Modal header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 24px', borderBottom: '1px solid #e2e8f0', background: '#fff', flexShrink: 0 }}>
