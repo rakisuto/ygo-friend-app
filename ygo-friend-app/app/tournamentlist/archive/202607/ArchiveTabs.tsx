@@ -3,6 +3,8 @@
 import { useRouter, usePathname } from 'next/navigation';
 import type { TeamMatch } from './types';
 import TeamResultContent from './TeamResultContent';
+import TeamPlayerStatsContent from './TeamPlayerStatsContent';
+import TeamOverallStatsContent from './TeamOverallStatsContent';
 
 type Tab = 'result' | 'player' | 'overall';
 
@@ -63,24 +65,8 @@ export default function ArchiveTabs({ matches, activeTab }: Props) {
 
       {/* タブコンテンツ */}
       {activeTab === 'result' && <TeamResultContent matches={matches} />}
-      {activeTab === 'player' && (
-        <div style={{
-          background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0',
-          padding: '40px 20px', textAlign: 'center', color: '#94a3b8',
-        }}>
-          <p style={{ fontSize: '1rem', marginBottom: '8px' }}>👤 プレイヤー成績</p>
-          <p style={{ fontSize: '0.875rem' }}>チーム戦形式のため、個人成績は準備中です。</p>
-        </div>
-      )}
-      {activeTab === 'overall' && (
-        <div style={{
-          background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0',
-          padding: '40px 20px', textAlign: 'center', color: '#94a3b8',
-        }}>
-          <p style={{ fontSize: '1rem', marginBottom: '8px' }}>🏆 総合成績</p>
-          <p style={{ fontSize: '0.875rem' }}>チーム戦形式のため、総合成績は準備中です。</p>
-        </div>
-      )}
+      {activeTab === 'player' && <TeamPlayerStatsContent matches={matches} />}
+      {activeTab === 'overall' && <TeamOverallStatsContent matches={matches} />}
     </div>
   );
 }
