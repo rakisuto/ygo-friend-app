@@ -73,6 +73,25 @@ export default function TopPage() {
           </Link>
 
           <Link
+            href="/draft"
+            style={{
+              display: 'block',
+              padding: '14px 20px',
+              background: '#ffffff',
+              border: '1px solid #e2e8f0',
+              borderRadius: '10px',
+              color: '#1e293b',
+              fontSize: '1rem',
+              fontWeight: 500,
+              textAlign: 'center',
+              textDecoration: 'none',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+            }}
+          >
+            🃏 ドラフト
+          </Link>
+
+          <Link
             href="/tournament/admin"
             style={{
               display: 'block',
