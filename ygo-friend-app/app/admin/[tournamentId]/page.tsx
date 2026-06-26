@@ -73,12 +73,6 @@ export default function TournamentAdminPage({ params }: { params: Promise<{ tour
       body: JSON.stringify(payload),
     });
     setMetaSaving(false);
-    if (res.status === 401) {
-      setPinError('PINが正しくありません');
-      setPin('');
-      setPinInput('');
-      return;
-    }
     if (res.ok) {
       setMeta(payload);
       setMetaWinner(payload.winner ?? '');

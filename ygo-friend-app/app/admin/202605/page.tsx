@@ -177,7 +177,6 @@ export default function Admin202605Page() {
     };
     const res = await adminFetch('/api/tournaments/202605/meta', { method: 'PUT', body: JSON.stringify(payload) });
     setMetaSaving(false);
-    if (res.status === 401) { handleUnauthorized(); return; }
     if (res.ok) {
       setMeta(payload);
       setMetaWinner(payload.winner ?? '');
