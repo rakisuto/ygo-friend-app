@@ -8,11 +8,10 @@ const SITE_TITLE = 'マスターデュエル身内戦';
 const SITE_EMOJI = '🎮';
 
 const NAV_LINKS = [
-  { href: '/tournament', label: '📋 試合表' },
-  { href: '/stats/player', label: '👤 個人成績' },
-  { href: '/stats/overall', label: '🏆 総合成績' },
-  { href: '/tournament/admin', label: '⚙️ 管理画面' },
-  { href: '/draft', label: '🃏 ドラフト' },
+  { href: '/', label: '🏠 TOP' },
+  { href: '/tournamentlist', label: '📋 大会一覧' },
+  { href: '/tournament/admin', label: '⚙️ 管理者画面' },
+  { href: 'https://www.masterduelmeta.com/', label: '🌐 MasterDuelMeta', external: true },
 ];
 
 export default function Navbar() {
@@ -104,22 +103,37 @@ export default function Navbar() {
         {/* Nav links */}
         <div style={{ padding: '12px', flex: 1 }}>
           {NAV_LINKS.map(link => {
-            const isActive = pathname === link.href;
+            const isActive = !link.external && pathname === link.href;
+            const linkStyle: React.CSSProperties = {
+              display: 'block', padding: '12px 16px',
+              textDecoration: 'none',
+              color: isActive ? '#2563eb' : '#334155',
+              background: isActive ? '#eff6ff' : 'transparent',
+              borderRadius: '8px', marginBottom: '4px',
+              fontWeight: isActive ? 600 : 400,
+              fontSize: '1rem',
+              borderLeft: isActive ? '3px solid #2563eb' : '3px solid transparent',
+            };
+            if (link.external) {
+              return (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => setOpen(false)}
+                  style={linkStyle}
+                >
+                  {link.label}
+                </a>
+              );
+            }
             return (
               <Link
                 key={link.href}
                 href={link.href}
                 onClick={() => setOpen(false)}
-                style={{
-                  display: 'block', padding: '12px 16px',
-                  textDecoration: 'none',
-                  color: isActive ? '#2563eb' : '#334155',
-                  background: isActive ? '#eff6ff' : 'transparent',
-                  borderRadius: '8px', marginBottom: '4px',
-                  fontWeight: isActive ? 600 : 400,
-                  fontSize: '1rem',
-                  borderLeft: isActive ? '3px solid #2563eb' : '3px solid transparent',
-                }}
+                style={linkStyle}
               >
                 {link.label}
               </Link>
