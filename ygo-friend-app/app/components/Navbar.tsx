@@ -32,7 +32,7 @@ export default function Navbar() {
         }}
       >
         <Link
-          href="/tournament"
+          href="/"
           style={{
             textDecoration: 'none', color: '#1e293b', fontWeight: 700,
             fontSize: 'clamp(0.75rem, 3vw, 0.9375rem)',
