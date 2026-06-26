@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import type { DeckUsage, DeckWinStat } from '@/lib/tournament/stats';
 

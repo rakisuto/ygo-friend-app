@@ -53,22 +53,24 @@ export default function TopPage() {
             maxWidth: '320px',
           }}
         >
-          <span
+          <Link
+            href="/tournamentlist"
             style={{
               display: 'block',
               padding: '14px 20px',
               background: '#ffffff',
               border: '1px solid #e2e8f0',
               borderRadius: '10px',
-              color: '#94a3b8',
+              color: '#1e293b',
               fontSize: '1rem',
               fontWeight: 500,
               textAlign: 'center',
-              cursor: 'default',
+              textDecoration: 'none',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
             }}
           >
             📋 大会一覧
-          </span>
+          </Link>
 
           <Link
             href="/tournament/admin"
