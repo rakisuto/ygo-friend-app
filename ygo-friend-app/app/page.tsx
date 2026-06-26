@@ -14,16 +14,21 @@ export default function TopPage() {
           justifyContent: 'center',
           gap: '2rem',
           padding: '2rem 1rem',
-          background: '#f8fafc',
+          backgroundImage: 'url(/img/bg_1.jpg)',
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat',
         }}
       >
         <h1
+          className="reisho"
           style={{
-            fontSize: 'clamp(1.5rem, 6vw, 2.5rem)',
-            fontWeight: 800,
-            color: '#1e293b',
+            fontSize: 'clamp(2.5rem, 10vw, 4.5rem)',
+            fontWeight: 'normal',
+            color: '#ffffff',
             textAlign: 'center',
-            letterSpacing: '0.02em',
+            letterSpacing: '0.08em',
+            textShadow: '0 2px 12px rgba(0,0,0,0.7), 0 0 40px rgba(0,0,0,0.4)',
           }}
         >
           マスターデュエル身内戦
