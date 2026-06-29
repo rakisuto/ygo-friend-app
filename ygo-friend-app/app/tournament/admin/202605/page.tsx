@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { generateSeason } from '@/lib/tournament/generator';
-import type { Match, Season } from '../types';
-import SessionTabs from '../components/SessionTabs';
+import type { Match, Season } from '../../types';
+import SessionTabs from '../../components/SessionTabs';
 
 type Mode = 'view' | 'generate';
 
