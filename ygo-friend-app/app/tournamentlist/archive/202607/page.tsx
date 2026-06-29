@@ -31,10 +31,10 @@ export default async function Archive202607Page({ searchParams }: PageProps) {
   return (
     <main className="page-main">
       <div style={{ marginBottom: '1.25rem' }}>
-        <h1 className="reisho" style={{ fontSize: 'clamp(1.4rem, 5vw, 1.8rem)', fontWeight: 'bold', color: '#1e293b' }}>
+        <h1 className="reisho" style={{ fontSize: 'clamp(1.4rem, 5vw, 1.8rem)', fontWeight: 'bold', color: '#fff', textShadow: '0 2px 8px rgba(0,0,0,0.7)' }}>
           2026年7月大会
         </h1>
-        <p style={{ color: '#64748b', fontSize: '0.875rem', marginTop: '0.25rem' }}>
+        <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.875rem', marginTop: '0.25rem', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>
           2人チーム戦（チームA vs チームB）
         </p>
       </div>

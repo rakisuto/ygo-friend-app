@@ -32,7 +32,13 @@ export default function ArchiveTabs({ matches, activeTab }: Props) {
       {/* タブバー */}
       <div
         className="tab-scroll"
-        style={{ borderBottom: '2px solid #e2e8f0', marginBottom: '20px' }}
+        style={{
+          background: 'rgba(0,0,0,0.45)',
+          backdropFilter: 'blur(6px)',
+          borderRadius: '10px',
+          marginBottom: '20px',
+          padding: '4px',
+        }}
       >
         <div style={{ display: 'flex', gap: '4px', width: 'max-content', minWidth: '100%' }}>
           {TABS.map(({ key, label }) => (
@@ -41,20 +47,20 @@ export default function ArchiveTabs({ matches, activeTab }: Props) {
               onClick={() => handleTabChange(key)}
               style={{
                 padding: '10px 16px',
-                background: activeTab === key ? '#eff6ff' : 'transparent',
+                background: activeTab === key ? 'rgba(255,255,255,0.2)' : 'transparent',
                 border: 'none',
-                borderBottom: activeTab === key ? '2px solid #2563eb' : '2px solid transparent',
-                marginBottom: '-2px',
+                borderBottom: activeTab === key ? '2px solid #93c5fd' : '2px solid transparent',
                 cursor: 'pointer',
-                borderRadius: '6px 6px 0 0',
+                borderRadius: '6px',
                 flexShrink: 0,
               }}
             >
               <div style={{
                 fontSize: '0.875rem',
                 fontWeight: 700,
-                color: activeTab === key ? '#1d4ed8' : '#64748b',
+                color: activeTab === key ? '#fff' : 'rgba(255,255,255,0.7)',
                 whiteSpace: 'nowrap',
+                textShadow: '0 1px 3px rgba(0,0,0,0.5)',
               }}>
                 {label}
               </div>
