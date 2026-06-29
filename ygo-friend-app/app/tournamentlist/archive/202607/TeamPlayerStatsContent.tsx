@@ -75,29 +75,40 @@ function computeAllPlayerStats(matches: TeamMatch[]): Record<string, PlayerStats
 }
 
 function WinRateBadge({ wins, losses, winRate }: { wins: number; losses: number; winRate: number }) {
-  const color = winRate >= 60 ? '#16a34a' : winRate >= 40 ? '#d97706' : '#dc2626';
+  const color = winRate >= 60 ? '#4ade80' : winRate >= 40 ? '#fbbf24' : '#f87171';
+  const bg = winRate >= 60 ? 'rgba(74,222,128,0.15)' : winRate >= 40 ? 'rgba(251,191,36,0.15)' : 'rgba(248,113,113,0.15)';
   return (
     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-      <span style={{ color: '#475569' }}>{wins}勝{losses}敗</span>
-      <span style={{
-        fontWeight: 700, fontSize: '0.875rem', color,
-        background: winRate >= 60 ? '#dcfce7' : winRate >= 40 ? '#fef9c3' : '#fee2e2',
-        borderRadius: '999px', padding: '1px 10px',
-      }}>
+      <span style={{ color: 'rgba(148,163,184,0.9)' }}>{wins}勝{losses}敗</span>
+      <span style={{ fontWeight: 700, fontSize: '0.875rem', color, background: bg, borderRadius: '999px', padding: '1px 10px' }}>
         {wins + losses === 0 ? '—' : `${winRate}%`}
       </span>
     </span>
   );
 }
 
+const glass: React.CSSProperties = {
+  background: 'rgba(10, 15, 35, 0.65)',
+  backdropFilter: 'blur(16px)',
+  WebkitBackdropFilter: 'blur(16px)',
+  border: '1px solid rgba(255,255,255,0.12)',
+  borderRadius: '14px',
+  boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08)',
+};
+
+const thStyle: React.CSSProperties = {
+  fontWeight: 700,
+  fontSize: '0.75rem',
+  textTransform: 'uppercase',
+  letterSpacing: '0.06em',
+  color: 'rgba(148,163,184,0.9)',
+};
+
 function SectionCard({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div style={{
-      background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0',
-      padding: '16px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', marginBottom: '16px',
-    }}>
+    <div style={{ ...glass, padding: '16px', marginBottom: '16px' }}>
       <h3 style={{
-        fontSize: '0.75rem', fontWeight: 700, color: '#64748b',
+        fontSize: '0.75rem', fontWeight: 700, color: 'rgba(148,163,184,0.8)',
         textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '12px',
       }}>{title}</h3>
       {children}
@@ -117,7 +128,7 @@ export default function TeamPlayerStatsContent({ matches: rawMatches }: Props) {
 
   if (players.length === 0) {
     return (
-      <div style={{ textAlign: 'center', color: '#94a3b8', padding: '3rem 0' }}>
+      <div style={{ textAlign: 'center', color: 'rgba(148,163,184,0.7)', padding: '3rem 0' }}>
         まだ試合結果がありません
       </div>
     );
@@ -127,11 +138,9 @@ export default function TeamPlayerStatsContent({ matches: rawMatches }: Props) {
 
   return (
     <div>
-      <div style={{
-        background: '#fff', borderRadius: '12px', border: '1px solid #e2e8f0',
-        padding: '16px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', marginBottom: '20px',
-      }}>
-        <label style={{ fontSize: '0.875rem', fontWeight: 600, color: '#374151', display: 'block', marginBottom: '10px' }}>
+      {/* プレイヤー選択 */}
+      <div style={{ ...glass, padding: '16px', marginBottom: '20px' }}>
+        <label style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'rgba(148,163,184,0.9)', display: 'block', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
           プレイヤーを選択
         </label>
         <select
@@ -139,37 +148,37 @@ export default function TeamPlayerStatsContent({ matches: rawMatches }: Props) {
           onChange={e => setSelectedName(e.target.value)}
           style={{
             width: '100%', maxWidth: '320px',
-            border: '1px solid #d1d5db', borderRadius: '8px',
-            padding: '10px 12px', fontSize: '1rem', color: '#1e293b',
-            background: '#f8fafc', cursor: 'pointer',
+            border: '1px solid rgba(255,255,255,0.15)', borderRadius: '8px',
+            padding: '10px 12px', fontSize: '1rem', color: '#f1f5f9',
+            background: 'rgba(255,255,255,0.08)', cursor: 'pointer',
           }}
         >
           {players.map(name => (
-            <option key={name} value={name}>{name}</option>
+            <option key={name} value={name} style={{ background: '#1e293b', color: '#f1f5f9' }}>{name}</option>
           ))}
         </select>
       </div>
 
       {!stats || noData ? (
-        <div style={{ textAlign: 'center', color: '#94a3b8', padding: '3rem 0' }}>
+        <div style={{ textAlign: 'center', color: 'rgba(148,163,184,0.7)', padding: '3rem 0' }}>
           まだ試合結果がありません
         </div>
       ) : (
         <>
           <SectionCard title="総合成績">
-            <div style={{ fontSize: '1.375rem', fontWeight: 700, color: '#1e293b', marginBottom: '12px' }}>
+            <div style={{ fontSize: '1.375rem', fontWeight: 700, color: '#f1f5f9', marginBottom: '12px' }}>
               <WinRateBadge wins={stats.wins} losses={stats.losses} winRate={stats.winRate} />
             </div>
             <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
               <div style={{ minWidth: '100px' }}>
-                <span style={{ fontSize: '0.75rem', color: '#94a3b8', display: 'block', marginBottom: '3px' }}>先攻</span>
+                <span style={{ fontSize: '0.75rem', color: 'rgba(148,163,184,0.7)', display: 'block', marginBottom: '3px' }}>先攻</span>
                 <WinRateBadge
                   wins={stats.firstWins} losses={stats.firstLosses}
                   winRate={stats.firstWins + stats.firstLosses > 0 ? Math.round(stats.firstWins / (stats.firstWins + stats.firstLosses) * 1000) / 10 : 0}
                 />
               </div>
               <div style={{ minWidth: '100px' }}>
-                <span style={{ fontSize: '0.75rem', color: '#94a3b8', display: 'block', marginBottom: '3px' }}>後攻</span>
+                <span style={{ fontSize: '0.75rem', color: 'rgba(148,163,184,0.7)', display: 'block', marginBottom: '3px' }}>後攻</span>
                 <WinRateBadge
                   wins={stats.secondWins} losses={stats.secondLosses}
                   winRate={stats.secondWins + stats.secondLosses > 0 ? Math.round(stats.secondWins / (stats.secondWins + stats.secondLosses) * 1000) / 10 : 0}
@@ -180,28 +189,28 @@ export default function TeamPlayerStatsContent({ matches: rawMatches }: Props) {
 
           <SectionCard title="デッキ別勝率">
             {Object.keys(stats.deckStats).length === 0 ? (
-              <p style={{ color: '#94a3b8', fontSize: '0.875rem' }}>デッキ情報なし</p>
+              <p style={{ color: 'rgba(148,163,184,0.6)', fontSize: '0.875rem' }}>デッキ情報なし</p>
             ) : (
               <div className="table-scroll">
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem', minWidth: '260px' }}>
                   <thead>
-                    <tr style={{ borderBottom: '2px solid #f1f5f9' }}>
-                      <th style={{ textAlign: 'left', padding: '6px 8px', color: '#64748b', fontWeight: 600 }}>デッキ</th>
-                      <th style={{ textAlign: 'center', padding: '6px 8px', color: '#64748b', fontWeight: 600, width: '40px' }}>勝</th>
-                      <th style={{ textAlign: 'center', padding: '6px 8px', color: '#64748b', fontWeight: 600, width: '40px' }}>敗</th>
-                      <th style={{ textAlign: 'right', padding: '6px 8px', color: '#64748b', fontWeight: 600, width: '64px' }}>勝率</th>
+                    <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                      <th style={{ ...thStyle, textAlign: 'left', padding: '6px 8px' }}>デッキ</th>
+                      <th style={{ ...thStyle, textAlign: 'center', padding: '6px 8px', color: '#4ade80', width: '40px' }}>勝</th>
+                      <th style={{ ...thStyle, textAlign: 'center', padding: '6px 8px', color: '#f87171', width: '40px' }}>敗</th>
+                      <th style={{ ...thStyle, textAlign: 'right', padding: '6px 8px', width: '64px' }}>勝率</th>
                     </tr>
                   </thead>
                   <tbody>
                     {Object.entries(stats.deckStats)
                       .sort((a, b) => b[1].winRate - a[1].winRate)
                       .map(([deck, r]) => (
-                        <tr key={deck} style={{ borderBottom: '1px solid #f8fafc' }}>
-                          <td style={{ padding: '8px', color: '#1e293b', fontWeight: 500 }}>{deck}</td>
-                          <td style={{ padding: '8px', textAlign: 'center', color: '#16a34a', fontWeight: 600 }}>{r.wins}</td>
-                          <td style={{ padding: '8px', textAlign: 'center', color: '#dc2626', fontWeight: 600 }}>{r.losses}</td>
+                        <tr key={deck} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                          <td style={{ padding: '8px', color: 'rgba(226,232,240,0.9)', fontWeight: 500 }}>{deck}</td>
+                          <td style={{ padding: '8px', textAlign: 'center', color: '#4ade80', fontWeight: 600 }}>{r.wins}</td>
+                          <td style={{ padding: '8px', textAlign: 'center', color: '#f87171', fontWeight: 600 }}>{r.losses}</td>
                           <td style={{ padding: '8px', textAlign: 'right' }}>
-                            <span style={{ fontWeight: 700, color: r.winRate >= 60 ? '#16a34a' : r.winRate >= 40 ? '#d97706' : '#dc2626' }}>
+                            <span style={{ fontWeight: 700, color: r.winRate >= 60 ? '#4ade80' : r.winRate >= 40 ? '#fbbf24' : '#f87171' }}>
                               {r.winRate}%
                             </span>
                           </td>
@@ -215,28 +224,28 @@ export default function TeamPlayerStatsContent({ matches: rawMatches }: Props) {
 
           <SectionCard title="対プレイヤー成績">
             {Object.keys(stats.vsStats).length === 0 ? (
-              <p style={{ color: '#94a3b8', fontSize: '0.875rem' }}>データなし</p>
+              <p style={{ color: 'rgba(148,163,184,0.6)', fontSize: '0.875rem' }}>データなし</p>
             ) : (
               <div className="table-scroll">
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem', minWidth: '240px' }}>
                   <thead>
-                    <tr style={{ borderBottom: '2px solid #f1f5f9' }}>
-                      <th style={{ textAlign: 'left', padding: '6px 8px', color: '#64748b', fontWeight: 600 }}>相手</th>
-                      <th style={{ textAlign: 'center', padding: '6px 8px', color: '#64748b', fontWeight: 600, width: '40px' }}>勝</th>
-                      <th style={{ textAlign: 'center', padding: '6px 8px', color: '#64748b', fontWeight: 600, width: '40px' }}>敗</th>
-                      <th style={{ textAlign: 'right', padding: '6px 8px', color: '#64748b', fontWeight: 600, width: '64px' }}>勝率</th>
+                    <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                      <th style={{ ...thStyle, textAlign: 'left', padding: '6px 8px' }}>相手</th>
+                      <th style={{ ...thStyle, textAlign: 'center', padding: '6px 8px', color: '#4ade80', width: '40px' }}>勝</th>
+                      <th style={{ ...thStyle, textAlign: 'center', padding: '6px 8px', color: '#f87171', width: '40px' }}>敗</th>
+                      <th style={{ ...thStyle, textAlign: 'right', padding: '6px 8px', width: '64px' }}>勝率</th>
                     </tr>
                   </thead>
                   <tbody>
                     {Object.values(stats.vsStats)
                       .sort((a, b) => b.winRate - a.winRate)
                       .map(v => (
-                        <tr key={v.name} style={{ borderBottom: '1px solid #f8fafc' }}>
-                          <td style={{ padding: '8px', color: '#1e293b', fontWeight: 500 }}>{v.name}</td>
-                          <td style={{ padding: '8px', textAlign: 'center', color: '#16a34a', fontWeight: 600 }}>{v.wins}</td>
-                          <td style={{ padding: '8px', textAlign: 'center', color: '#dc2626', fontWeight: 600 }}>{v.losses}</td>
+                        <tr key={v.name} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                          <td style={{ padding: '8px', color: 'rgba(226,232,240,0.9)', fontWeight: 500 }}>{v.name}</td>
+                          <td style={{ padding: '8px', textAlign: 'center', color: '#4ade80', fontWeight: 600 }}>{v.wins}</td>
+                          <td style={{ padding: '8px', textAlign: 'center', color: '#f87171', fontWeight: 600 }}>{v.losses}</td>
                           <td style={{ padding: '8px', textAlign: 'right' }}>
-                            <span style={{ fontWeight: 700, color: v.winRate >= 60 ? '#16a34a' : v.winRate >= 40 ? '#d97706' : '#dc2626' }}>
+                            <span style={{ fontWeight: 700, color: v.winRate >= 60 ? '#4ade80' : v.winRate >= 40 ? '#fbbf24' : '#f87171' }}>
                               {v.winRate}%
                             </span>
                           </td>
