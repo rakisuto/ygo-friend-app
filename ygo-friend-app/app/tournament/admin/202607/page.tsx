@@ -107,6 +107,134 @@ function HoverButton({
   );
 }
 
+// ── TeamSettingsFields ────────────────────────────────────────────────────────
+function TeamSettingsFields({
+  playerNames,
+  teamNames, onTeamNameChange,
+  playerTeams, onPlayerTeamChange,
+  teamPlayerNames, onTeamPlayerNameChange,
+  playerDeckThemes, onPlayerDeckThemesChange,
+  themes,
+}: {
+  playerNames: string[];
+  teamNames: { A: string; B: string };
+  onTeamNameChange: (team: TeamKey, value: string) => void;
+  playerTeams: TeamKey[];
+  onPlayerTeamChange: (index: number, team: TeamKey) => void;
+  teamPlayerNames: string[];
+  onTeamPlayerNameChange: (index: number, value: string) => void;
+  playerDeckThemes: Theme[][];
+  onPlayerDeckThemesChange: (index: number, themes: Theme[]) => void;
+  themes: Theme[];
+}) {
+  return (
+    <>
+      {/* チーム名称 */}
+      <div style={{ marginBottom: '16px' }}>
+        <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#64748b', marginBottom: '8px' }}>
+          チーム名称
+        </label>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {TEAM_KEYS.map(team => (
+            <div key={team} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ fontSize: '0.8125rem', color: '#94a3b8', width: '56px', flexShrink: 0 }}>チーム{team}</span>
+              <input
+                value={teamNames[team]}
+                onChange={e => onTeamNameChange(team, e.target.value)}
+                placeholder={`チーム${team}の名称`}
+                style={{ flex: 1, border: '1px solid #d1d5db', borderRadius: '8px', padding: '8px 12px', fontSize: '0.9375rem', outline: 'none', color: '#1e293b' }}
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* チームプレイヤー設定 */}
+      <div style={{ marginBottom: '16px' }}>
+        <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#64748b', marginBottom: '8px' }}>
+          チームプレイヤー設定
+        </label>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {playerNames.map((name, i) => {
+            const selectedThemes = playerDeckThemes[i] ?? [];
+            return (
+              <div key={i} style={{ border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                  <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#1e293b', flex: 1 }}>
+                    {name || `プレイヤー${i + 1}`}
+                  </span>
+                  <select
+                    value={playerTeams[i] ?? 'A'}
+                    onChange={e => onPlayerTeamChange(i, e.target.value as TeamKey)}
+                    style={{ border: '1px solid #d1d5db', borderRadius: '8px', padding: '6px 10px', fontSize: '0.8125rem', color: '#1e293b', outline: 'none' }}
+                  >
+                    {TEAM_KEYS.map(team => (
+                      <option key={team} value={team}>チーム{team}</option>
+                    ))}
+                  </select>
+                </div>
+                <input
+                  value={teamPlayerNames[i] ?? ''}
+                  onChange={e => onTeamPlayerNameChange(i, e.target.value)}
+                  placeholder="チーム内での表示名（任意）"
+                  style={{
+                    width: '100%', boxSizing: 'border-box',
+                    border: '1px solid #d1d5db', borderRadius: '8px',
+                    padding: '8px 12px', fontSize: '0.875rem', outline: 'none',
+                    color: '#1e293b', marginBottom: '10px',
+                  }}
+                />
+                <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '6px' }}>
+                  デッキテーマ（最大3つ）{selectedThemes.length}/3
+                </div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                  {themes.map(theme => {
+                    const selected = selectedThemes.some(t => t.cardId === theme.cardId);
+                    const disableAdd = !selected && selectedThemes.length >= 3;
+                    return (
+                      <label
+                        key={theme.cardId}
+                        style={{
+                          display: 'inline-flex', alignItems: 'center', gap: '5px',
+                          border: `1px solid ${selected ? '#2563eb' : '#d1d5db'}`,
+                          background: selected ? '#eff6ff' : '#fff',
+                          borderRadius: '20px', padding: '4px 10px', fontSize: '0.75rem',
+                          color: disableAdd ? '#cbd5e1' : '#1e293b',
+                          cursor: disableAdd ? 'default' : 'pointer',
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selected}
+                          disabled={disableAdd}
+                          onChange={() => {
+                            if (selected) {
+                              onPlayerDeckThemesChange(i, selectedThemes.filter(t => t.cardId !== theme.cardId));
+                            } else if (selectedThemes.length < 3) {
+                              onPlayerDeckThemesChange(i, [...selectedThemes, theme]);
+                            }
+                          }}
+                          style={{ margin: 0 }}
+                        />
+                        {theme.cardName}
+                      </label>
+                    );
+                  })}
+                  {themes.length === 0 && (
+                    <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
+                      候補テーマがありません（ドラフト設定で登録してください）
+                    </span>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </>
+  );
+}
+
 // ── Card component ───────────────────────────────────────────────────────────
 function Card({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
@@ -136,6 +264,10 @@ export default function AdminPage() {
   const [seasonName, setSeasonName] = useState('');
   const [playerNames, setPlayerNames] = useState(['', '', '', '']);
   const [dates, setDates] = useState(['', '', '', '']);
+  const [teamNames, setTeamNames] = useState<{ A: string; B: string }>({ A: '', B: '' });
+  const [playerTeams, setPlayerTeams] = useState<TeamKey[]>(['A', 'A', 'B', 'B']);
+  const [teamPlayerNames, setTeamPlayerNames] = useState<string[]>(['', '', '', '']);
+  const [playerDeckThemes, setPlayerDeckThemes] = useState<Theme[][]>([[], [], [], []]);
   const [generating, setGenerating] = useState(false);
   const [genError, setGenError] = useState('');
 
@@ -204,7 +336,17 @@ export default function AdminPage() {
 
     setGenerating(true);
     try {
-      const newSeason = generateSeason(playerNames.map(n => n.trim()), dates, seasonName.trim());
+      const base = generateSeason(playerNames.map(n => n.trim()), dates, seasonName.trim());
+      const newSeason: Season = {
+        ...base,
+        teamNames,
+        players: base.players.map((p, i) => ({
+          ...p,
+          team: playerTeams[i],
+          teamPlayerName: teamPlayerNames[i].trim(),
+          deckThemes: playerDeckThemes[i],
+        })),
+      };
       const res = await adminFetch('/api/tournament/202607', { method: 'POST', body: JSON.stringify(newSeason) });
       if (res.status === 401) { handleUnauthorized(); return; }
       if (!res.ok) {
@@ -395,6 +537,24 @@ export default function AdminPage() {
           </div>
         </Card>
 
+        <Card style={{ marginBottom: '16px' }}>
+          <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 700, color: '#374151', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            チーム設定
+          </label>
+          <TeamSettingsFields
+            playerNames={playerNames}
+            teamNames={teamNames}
+            onTeamNameChange={(team, value) => setTeamNames(prev => ({ ...prev, [team]: value }))}
+            playerTeams={playerTeams}
+            onPlayerTeamChange={(i, team) => setPlayerTeams(prev => prev.map((t, j) => j === i ? team : t))}
+            teamPlayerNames={teamPlayerNames}
+            onTeamPlayerNameChange={(i, value) => setTeamPlayerNames(prev => prev.map((n, j) => j === i ? value : n))}
+            playerDeckThemes={playerDeckThemes}
+            onPlayerDeckThemesChange={(i, list) => setPlayerDeckThemes(prev => prev.map((l, j) => j === i ? list : l))}
+            themes={themes}
+          />
+        </Card>
+
         <Card style={{ marginBottom: '24px' }}>
           <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 700, color: '#374151', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             開催日（4日程）
@@ -471,112 +631,18 @@ export default function AdminPage() {
               </div>
             </div>
 
-            {/* チーム名称 */}
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#64748b', marginBottom: '8px' }}>
-                チーム名称
-              </label>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {TEAM_KEYS.map(team => (
-                  <div key={team} style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <span style={{ fontSize: '0.8125rem', color: '#94a3b8', width: '56px', flexShrink: 0 }}>チーム{team}</span>
-                    <input
-                      value={editTeamNames[team]}
-                      onChange={e => setEditTeamNames(prev => ({ ...prev, [team]: e.target.value }))}
-                      placeholder={`チーム${team}の名称`}
-                      style={{ flex: 1, border: '1px solid #d1d5db', borderRadius: '8px', padding: '8px 12px', fontSize: '0.9375rem', outline: 'none', color: '#1e293b' }}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* チームプレイヤー設定 */}
-            <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 600, color: '#64748b', marginBottom: '8px' }}>
-                チームプレイヤー設定
-              </label>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                {editPlayerNames.map((name, i) => {
-                  const selectedThemes = editPlayerDeckThemes[i] ?? [];
-                  return (
-                    <div key={i} style={{ border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                        <span style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#1e293b', flex: 1 }}>
-                          {name || `プレイヤー${i + 1}`}
-                        </span>
-                        <select
-                          value={editPlayerTeams[i] ?? 'A'}
-                          onChange={e => {
-                            const value = e.target.value as TeamKey;
-                            setEditPlayerTeams(prev => prev.map((t, j) => j === i ? value : t));
-                          }}
-                          style={{ border: '1px solid #d1d5db', borderRadius: '8px', padding: '6px 10px', fontSize: '0.8125rem', color: '#1e293b', outline: 'none' }}
-                        >
-                          {TEAM_KEYS.map(team => (
-                            <option key={team} value={team}>チーム{team}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <input
-                        value={editTeamPlayerNames[i] ?? ''}
-                        onChange={e => setEditTeamPlayerNames(prev => prev.map((n, j) => j === i ? e.target.value : n))}
-                        placeholder="チーム内での表示名（任意）"
-                        style={{
-                          width: '100%', boxSizing: 'border-box',
-                          border: '1px solid #d1d5db', borderRadius: '8px',
-                          padding: '8px 12px', fontSize: '0.875rem', outline: 'none',
-                          color: '#1e293b', marginBottom: '10px',
-                        }}
-                      />
-                      <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginBottom: '6px' }}>
-                        デッキテーマ（最大3つ）{selectedThemes.length}/3
-                      </div>
-                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                        {themes.map(theme => {
-                          const selected = selectedThemes.some(t => t.cardId === theme.cardId);
-                          const disableAdd = !selected && selectedThemes.length >= 3;
-                          return (
-                            <label
-                              key={theme.cardId}
-                              style={{
-                                display: 'inline-flex', alignItems: 'center', gap: '5px',
-                                border: `1px solid ${selected ? '#2563eb' : '#d1d5db'}`,
-                                background: selected ? '#eff6ff' : '#fff',
-                                borderRadius: '20px', padding: '4px 10px', fontSize: '0.75rem',
-                                color: disableAdd ? '#cbd5e1' : '#1e293b',
-                                cursor: disableAdd ? 'default' : 'pointer',
-                              }}
-                            >
-                              <input
-                                type="checkbox"
-                                checked={selected}
-                                disabled={disableAdd}
-                                onChange={() => {
-                                  setEditPlayerDeckThemes(prev => prev.map((list, j) => {
-                                    if (j !== i) return list;
-                                    if (selected) return list.filter(t => t.cardId !== theme.cardId);
-                                    if (list.length >= 3) return list;
-                                    return [...list, theme];
-                                  }));
-                                }}
-                                style={{ margin: 0 }}
-                              />
-                              {theme.cardName}
-                            </label>
-                          );
-                        })}
-                        {themes.length === 0 && (
-                          <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>
-                            候補テーマがありません（ドラフト設定で登録してください）
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+            <TeamSettingsFields
+              playerNames={editPlayerNames}
+              teamNames={editTeamNames}
+              onTeamNameChange={(team, value) => setEditTeamNames(prev => ({ ...prev, [team]: value }))}
+              playerTeams={editPlayerTeams}
+              onPlayerTeamChange={(i, team) => setEditPlayerTeams(prev => prev.map((t, j) => j === i ? team : t))}
+              teamPlayerNames={editTeamPlayerNames}
+              onTeamPlayerNameChange={(i, value) => setEditTeamPlayerNames(prev => prev.map((n, j) => j === i ? value : n))}
+              playerDeckThemes={editPlayerDeckThemes}
+              onPlayerDeckThemesChange={(i, list) => setEditPlayerDeckThemes(prev => prev.map((l, j) => j === i ? list : l))}
+              themes={themes}
+            />
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '10px' }}>
               {infoToast !== 'idle' && (
