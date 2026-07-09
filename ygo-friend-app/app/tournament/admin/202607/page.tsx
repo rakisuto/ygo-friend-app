@@ -1,13 +1,12 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { generateSeason } from '@/lib/tournament/generator';
-import type { Match, Season } from '../../types';
+import { generateTeamSeason } from '@/lib/tournament/generator';
+import type { Match, Season, TeamKey } from '../../types';
 import type { Theme } from '@/app/types/draft';
 import SessionTabs from '../../components/SessionTabs';
 
-const TEAM_KEYS = ['A', 'B'] as const;
-type TeamKey = typeof TEAM_KEYS[number];
+const TEAM_KEYS: TeamKey[] = ['A', 'B'];
 
 type Mode = 'view' | 'generate';
 
@@ -336,13 +335,12 @@ export default function AdminPage() {
 
     setGenerating(true);
     try {
-      const base = generateSeason(playerNames.map(n => n.trim()), dates, seasonName.trim());
+      const base = generateTeamSeason(playerNames.map(n => n.trim()), playerTeams, dates, seasonName.trim());
       const newSeason: Season = {
         ...base,
         teamNames,
         players: base.players.map((p, i) => ({
           ...p,
-          team: playerTeams[i],
           teamPlayerName: teamPlayerNames[i].trim(),
           deckThemes: playerDeckThemes[i],
         })),

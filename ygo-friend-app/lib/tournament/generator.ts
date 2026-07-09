@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import type { Player, Match, Session, Season } from '@/app/tournament/types';
+import type { Player, Match, Session, Season, TeamKey } from '@/app/tournament/types';
 
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
@@ -62,6 +62,50 @@ export function generateSeason(
       matches: makeMatches(players, counts),
     };
   });
+
+  return {
+    id: uuidv4(),
+    name: seasonName,
+    players,
+    sessions,
+    createdAt: new Date().toISOString(),
+  };
+}
+
+// チーム同士(A vs B)の総当たりのみを組む。先攻/後攻はコイントスで決めるため生成時には割り当てない。
+function makeTeamMatches(teamA: Player[], teamB: Player[]): Match[] {
+  const matches: Match[] = [];
+  for (const a of teamA) {
+    for (const b of teamB) {
+      matches.push({
+        matchNumber: 0,
+        firstPlayerId: a.id,
+        firstPlayerDeck: null,
+        secondPlayerId: b.id,
+        secondPlayerDeck: null,
+        winnerId: null,
+      });
+    }
+  }
+  return shuffle(matches).map((m, i) => ({ ...m, matchNumber: i + 1 }));
+}
+
+export function generateTeamSeason(
+  playerNames: string[],
+  playerTeams: TeamKey[],
+  dates: string[],
+  seasonName: string
+): Season {
+  const players: Player[] = playerNames.map((name, i) => ({ id: uuidv4(), name, team: playerTeams[i] }));
+  const teamA = players.filter(p => p.team === 'A');
+  const teamB = players.filter(p => p.team === 'B');
+
+  const sessions: Session[] = dates.map((date, si) => ({
+    id: `session-${si + 1}`,
+    date,
+    label: `第${si + 1}回`,
+    matches: makeTeamMatches(teamA, teamB),
+  }));
 
   return {
     id: uuidv4(),

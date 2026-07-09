@@ -1,9 +1,11 @@
 ﻿import type { Theme } from '@/app/types/draft';
 
+export type TeamKey = 'A' | 'B';
+
 export interface Player {
   id: string;
   name: string;
-  team?: 'A' | 'B';
+  team?: TeamKey;
   teamPlayerName?: string;
   deckThemes?: Theme[];
 }
@@ -21,7 +23,7 @@ export interface Session {
   id: string;
   date: string;
   label: string;
-  firstPlayerCounts: Record<string, number>;
+  firstPlayerCounts?: Record<string, number>;
   matches: Match[];
 }
 

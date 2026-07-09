@@ -1,5 +1,5 @@
 import { kv } from '@/lib/kv';
-import type { TeamMatch } from './types';
+import type { Season } from '@/app/tournament/types';
 import ArchiveTabs from './ArchiveTabs';
 
 export const revalidate = 0;
@@ -20,12 +20,11 @@ export default async function Archive202607Page({ searchParams }: PageProps) {
   const { tab: rawTab } = await searchParams;
   const activeTab = parseTab(rawTab);
 
-  let matches: TeamMatch[] = [];
+  let season: Season | null = null;
   try {
-    const stored = await kv.get<TeamMatch[]>('tournament:202607:matches');
-    if (stored) matches = stored;
+    season = await kv.get<Season>('tournament:season:202607');
   } catch {
-    // KV接続エラー時は空配列として扱う
+    // KV接続エラー時はnullとして扱う
   }
 
   return (
@@ -35,11 +34,17 @@ export default async function Archive202607Page({ searchParams }: PageProps) {
           2026年7月大会
         </h1>
         <p style={{ color: 'rgba(255,255,255,0.85)', fontSize: '0.875rem', marginTop: '0.25rem', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>
-          2人チーム戦（チームA vs チームB）
+          {season?.teamNames?.A || 'チームA'} vs {season?.teamNames?.B || 'チームB'}
         </p>
       </div>
 
-      <ArchiveTabs matches={matches} activeTab={activeTab} />
+      {season ? (
+        <ArchiveTabs season={season} activeTab={activeTab} />
+      ) : (
+        <p style={{ color: 'rgba(255,255,255,0.85)', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>
+          スケジュールはまだ生成されていません。
+        </p>
+      )}
     </main>
   );
 }

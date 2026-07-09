@@ -43,6 +43,31 @@ export default function MatchTable({ session, players, isAdmin, onSave }: Props)
     if (toastState === 'saved') setToastState('idle');
   };
 
+  const swapSides = (index: number) => {
+    setEdited(prev =>
+      prev.map((m, i) => i === index ? {
+        ...m,
+        firstPlayerId: m.secondPlayerId,
+        secondPlayerId: m.firstPlayerId,
+        firstPlayerDeck: m.secondPlayerDeck,
+        secondPlayerDeck: m.firstPlayerDeck,
+      } : m)
+    );
+    if (toastState === 'saved') setToastState('idle');
+  };
+
+  const shuffleOrder = () => {
+    setEdited(prev => {
+      const arr = [...prev];
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr.map((m, i) => ({ ...m, matchNumber: i + 1 }));
+    });
+    if (toastState === 'saved') setToastState('idle');
+  };
+
   const handleSave = async () => {
     if (!onSave) return;
     setSaving(true);
@@ -68,16 +93,33 @@ export default function MatchTable({ session, players, isAdmin, onSave }: Props)
         </datalist>
       )}
 
+      {isAdmin && (
+        <div style={{ marginBottom: '10px', display: 'flex', justifyContent: 'flex-end' }}>
+          <button
+            type="button"
+            onClick={shuffleOrder}
+            style={{
+              padding: '5px 14px', fontSize: '0.8125rem', fontWeight: 600,
+              background: '#f1f5f9', color: '#475569', border: '1px solid #e2e8f0',
+              borderRadius: '999px', cursor: 'pointer',
+            }}
+          >
+            🎲 対戦順をシャッフル
+          </button>
+        </div>
+      )}
+
       <div style={{ overflowX: 'auto', borderRadius: '8px', border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.875rem' }} className="gothic">
           <thead>
             <tr>
-              <th style={COL.numHeader}>#</th>
+              <th style={COL.numHeader}>R</th>
               <th style={COL.firstHeader}>先攻</th>
               <th style={{ ...COL.firstDeckH, minWidth: '130px' }}>先攻デッキ</th>
               <th style={COL.secondHeader}>後攻</th>
               <th style={{ ...COL.secondDeckH, minWidth: '130px' }}>後攻デッキ</th>
               <th style={{ ...COL.winnerHeader, minWidth: '120px' }}>勝者</th>
+              {isAdmin && <th style={{ ...COL.numHeader, width: '48px' }}>入替</th>}
             </tr>
           </thead>
           <tbody>
@@ -87,8 +129,8 @@ export default function MatchTable({ session, players, isAdmin, onSave }: Props)
               const rowBg = firstWon || secondWon ? '#fefce8' : i % 2 === 0 ? '#ffffff' : '#f8fafc';
               return (
                 <tr key={match.matchNumber} style={{ background: rowBg, borderTop: '1px solid #f1f5f9' }}>
-                  <td style={{ padding: '8px', textAlign: 'center', color: '#94a3b8', fontFamily: 'monospace', borderRight: '1px solid #f1f5f9' }}>
-                    {match.matchNumber}
+                  <td style={{ padding: '8px', textAlign: 'center', color: '#94a3b8', fontFamily: 'monospace', borderRight: '1px solid #f1f5f9', whiteSpace: 'nowrap' }}>
+                    第{match.matchNumber}R
                   </td>
 
                   {/* 先攻 */}
@@ -169,6 +211,24 @@ export default function MatchTable({ session, players, isAdmin, onSave }: Props)
                       <span style={{ color: '#cbd5e1', fontSize: '0.75rem' }}>未定</span>
                     )}
                   </td>
+
+                  {/* 先攻/後攻 入替 */}
+                  {isAdmin && (
+                    <td style={{ padding: '6px 8px', textAlign: 'center' }}>
+                      <button
+                        type="button"
+                        onClick={() => swapSides(i)}
+                        title="先攻・後攻を入れ替え"
+                        style={{
+                          border: '1px solid #e2e8f0', borderRadius: '6px',
+                          background: '#fff', cursor: 'pointer',
+                          padding: '4px 8px', fontSize: '0.875rem', color: '#64748b',
+                        }}
+                      >
+                        ⇄
+                      </button>
+                    </td>
+                  )}
                 </tr>
               );
             })}

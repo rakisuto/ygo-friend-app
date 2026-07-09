@@ -1,5 +1,5 @@
 export type TeamLabel = 'A' | 'B';
-export type GameType = 'A1vsB1' | 'A2vsB2';
+export type GameType = string;
 
 export type TeamMatch = {
   date: string;

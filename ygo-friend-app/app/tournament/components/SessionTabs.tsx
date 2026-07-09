@@ -65,29 +65,31 @@ export default function SessionTabs({ season, isAdmin, onSessionSave, onDateChan
       {season.sessions.map((session, i) => (
         <div key={session.id} style={{ display: activeTab === i ? 'block' : 'none' }}>
 
-          {/* 先攻回数バッジ */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', marginBottom: '12px' }}>
-            <span style={{ fontSize: '0.75rem', color: '#94a3b8', flexShrink: 0 }}>先攻回数:</span>
-            {season.players.map(p => {
-              const count = session.firstPlayerCounts[p.id];
-              const colors = BADGE_COLORS[count] ?? { background: '#f1f5f9', color: '#475569', border: '#cbd5e1' };
-              return (
-                <span
-                  key={p.id}
-                  className="gothic"
-                  style={{
-                    fontSize: '0.75rem', fontWeight: 600,
-                    padding: '3px 10px', borderRadius: '999px',
-                    background: colors.background, color: colors.color,
-                    border: `1px solid ${colors.border}`,
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {p.name}：先攻{count}回
-                </span>
-              );
-            })}
-          </div>
+          {/* 先攻回数バッジ（事前割り当てがあるシーズンのみ表示） */}
+          {session.firstPlayerCounts && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap', marginBottom: '12px' }}>
+              <span style={{ fontSize: '0.75rem', color: '#94a3b8', flexShrink: 0 }}>先攻回数:</span>
+              {season.players.map(p => {
+                const count = session.firstPlayerCounts![p.id];
+                const colors = BADGE_COLORS[count] ?? { background: '#f1f5f9', color: '#475569', border: '#cbd5e1' };
+                return (
+                  <span
+                    key={p.id}
+                    className="gothic"
+                    style={{
+                      fontSize: '0.75rem', fontWeight: 600,
+                      padding: '3px 10px', borderRadius: '999px',
+                      background: colors.background, color: colors.color,
+                      border: `1px solid ${colors.border}`,
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    {p.name}：先攻{count}回
+                  </span>
+                );
+              })}
+            </div>
+          )}
 
           {/* 管理者用日付編集（独立した行） */}
           {isAdmin && onDateChange && (
