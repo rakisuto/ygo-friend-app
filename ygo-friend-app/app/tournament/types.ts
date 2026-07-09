@@ -1,6 +1,11 @@
-﻿export interface Player {
+﻿import type { Theme } from '@/app/types/draft';
+
+export interface Player {
   id: string;
   name: string;
+  team?: 'A' | 'B';
+  teamPlayerName?: string;
+  deckThemes?: Theme[];
 }
 
 export interface Match {
@@ -27,4 +32,5 @@ export interface Season {
   players: Player[];
   sessions: Session[];
   createdAt: string;
+  teamNames?: { A: string; B: string };
 }
