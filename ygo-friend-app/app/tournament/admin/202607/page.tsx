@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { generateTeamSeason } from '@/lib/tournament/generator';
-import type { Match, Season, TeamKey } from '../../types';
+import type { Match, Season, TeamKey, DeckImageMap, DeckImageMapping } from '../../types';
 import type { Theme } from '@/app/types/draft';
 import SessionTabs from '../../components/SessionTabs';
 
@@ -286,6 +286,7 @@ export default function AdminPage() {
   const [infoToast, setInfoToast] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
 
   const [themes, setThemes] = useState<Theme[]>([]);
+  const [deckImages, setDeckImages] = useState<DeckImageMap>({});
 
   useEffect(() => {
     if (season) setDescription(season.description ?? '');
@@ -303,6 +304,13 @@ export default function AdminPage() {
       .then(r => r.json())
       .then(data => setThemes(Array.isArray(data) ? data : []))
       .catch(() => setThemes([]));
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/tournament/202607/deck-images')
+      .then(r => r.json())
+      .then(data => setDeckImages(data ?? {}))
+      .catch(() => setDeckImages({}));
   }, []);
 
   const handlePinSubmit = () => {
@@ -326,6 +334,20 @@ export default function AdminPage() {
         ...((options.headers as Record<string, string>) ?? {}),
       },
     });
+
+  const handleDeckImageSave = async (deckName: string, mapping: DeckImageMapping | null) => {
+    const res = await adminFetch('/api/tournament/202607/deck-images', {
+      method: 'PATCH',
+      body: JSON.stringify({ deckName, mapping }),
+    });
+    if (res.status === 401) { handleUnauthorized(); return; }
+    if (!res.ok) return;
+    setDeckImages(prev => {
+      const next = { ...prev };
+      if (mapping) next[deckName] = mapping; else delete next[deckName];
+      return next;
+    });
+  };
 
   const handleGenerate = async () => {
     setGenError('');
@@ -773,6 +795,8 @@ export default function AdminPage() {
           isAdmin
           onSessionSave={handleSessionSave}
           onDateChange={handleDateChange}
+          deckImages={deckImages}
+          onDeckImageSave={handleDeckImageSave}
         />
       </Card>
 

@@ -1,7 +1,7 @@
 ﻿'use client';
 
 import { useState } from 'react';
-import type { Match, Season } from '../types';
+import type { Match, Season, DeckImageMap, DeckImageMapping } from '../types';
 import MatchTable from './MatchTable';
 
 interface Props {
@@ -9,6 +9,8 @@ interface Props {
   isAdmin?: boolean;
   onSessionSave?: (sessionId: string, matches: Match[]) => Promise<void>;
   onDateChange?: (sessionId: string, date: string) => Promise<void>;
+  deckImages?: DeckImageMap;
+  onDeckImageSave?: (deckName: string, mapping: DeckImageMapping | null) => Promise<void>;
 }
 
 const BADGE_COLORS: Record<number, { background: string; color: string; border: string }> = {
@@ -18,7 +20,7 @@ const BADGE_COLORS: Record<number, { background: string; color: string; border: 
   3: { background: '#dcfce7', color: '#166534', border: '#86efac' },
 };
 
-export default function SessionTabs({ season, isAdmin, onSessionSave, onDateChange }: Props) {
+export default function SessionTabs({ season, isAdmin, onSessionSave, onDateChange, deckImages, onDeckImageSave }: Props) {
   const [activeTab, setActiveTab] = useState(0);
 
   const formatDate = (dateStr: string) => {
@@ -118,6 +120,8 @@ export default function SessionTabs({ season, isAdmin, onSessionSave, onDateChan
             players={season.players}
             isAdmin={isAdmin}
             onSave={onSessionSave ? matches => onSessionSave(session.id, matches) : undefined}
+            deckImages={deckImages}
+            onDeckImageSave={onDeckImageSave}
           />
         </div>
       ))}

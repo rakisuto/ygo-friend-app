@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, usePathname } from 'next/navigation';
-import type { Season } from '@/app/tournament/types';
+import type { Season, DeckImageMap } from '@/app/tournament/types';
 import { seasonToTeamMatches } from './adapt';
 import TeamSessionTabs from './TeamSessionTabs';
 import TeamPlayerStatsContent from './TeamPlayerStatsContent';
@@ -18,9 +18,10 @@ const TABS: { key: Tab; label: string }[] = [
 interface Props {
   season: Season;
   activeTab: Tab;
+  deckImages?: DeckImageMap;
 }
 
-export default function ArchiveTabs({ season, activeTab }: Props) {
+export default function ArchiveTabs({ season, activeTab, deckImages }: Props) {
   const matches = seasonToTeamMatches(season);
   const router = useRouter();
   const pathname = usePathname();
@@ -72,7 +73,7 @@ export default function ArchiveTabs({ season, activeTab }: Props) {
       </div>
 
       {/* タブコンテンツ */}
-      {activeTab === 'result' && <TeamSessionTabs season={season} />}
+      {activeTab === 'result' && <TeamSessionTabs season={season} deckImages={deckImages} />}
       {activeTab === 'player' && <TeamPlayerStatsContent matches={matches} />}
       {activeTab === 'overall' && <TeamOverallStatsContent matches={matches} />}
     </div>

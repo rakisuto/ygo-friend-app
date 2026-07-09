@@ -1,5 +1,5 @@
 import { kv } from '@/lib/kv';
-import type { Season } from '@/app/tournament/types';
+import type { Season, DeckImageMap } from '@/app/tournament/types';
 import ArchiveTabs from './ArchiveTabs';
 
 export const revalidate = 0;
@@ -21,10 +21,16 @@ export default async function Archive202607Page({ searchParams }: PageProps) {
   const activeTab = parseTab(rawTab);
 
   let season: Season | null = null;
+  let deckImages: DeckImageMap = {};
   try {
     season = await kv.get<Season>('tournament:season:202607');
   } catch {
     // KV接続エラー時はnullとして扱う
+  }
+  try {
+    deckImages = (await kv.get<DeckImageMap>('tournament:202607:deckImages')) ?? {};
+  } catch {
+    // KV接続エラー時は空として扱う
   }
 
   return (
@@ -39,7 +45,7 @@ export default async function Archive202607Page({ searchParams }: PageProps) {
       </div>
 
       {season ? (
-        <ArchiveTabs season={season} activeTab={activeTab} />
+        <ArchiveTabs season={season} activeTab={activeTab} deckImages={deckImages} />
       ) : (
         <p style={{ color: 'rgba(255,255,255,0.85)', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>
           スケジュールはまだ生成されていません。

@@ -36,3 +36,13 @@ export interface Season {
   createdAt: string;
   teamNames?: { A: string; B: string };
 }
+
+/** デッキテーマ名 → 表示画像の紐づけ。1枚の画像を簡易クロップ(位置・拡大率)して使い回す。 */
+export interface DeckImageMapping {
+  imagePath: string;
+  offsetX: number; // 0-100 (%)
+  offsetY: number; // 0-100 (%)
+  scale: number; // 100-300 (%)
+}
+
+export type DeckImageMap = Record<string, DeckImageMapping>;

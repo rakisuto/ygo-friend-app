@@ -1,14 +1,18 @@
 ﻿'use client';
 
 import { useState, useEffect } from 'react';
-import type { Match, Player, Session } from '../types';
+import type { Match, Player, Session, DeckImageMap, DeckImageMapping } from '../types';
 import { DECK_THEMES } from '@/data/deckThemes';
+import DeckImageFrame from './DeckImageFrame';
+import DeckImagePicker from './DeckImagePicker';
 
 interface Props {
   session: Session;
   players: Player[];
   isAdmin?: boolean;
   onSave?: (matches: Match[]) => Promise<void>;
+  deckImages?: DeckImageMap;
+  onDeckImageSave?: (deckName: string, mapping: DeckImageMapping | null) => Promise<void>;
 }
 
 const COL = {
@@ -20,10 +24,11 @@ const COL = {
   numHeader:    { background: '#374151', color: '#ffffff', padding: '8px 10px', textAlign: 'center' as const, width: '40px' },
 };
 
-export default function MatchTable({ session, players, isAdmin, onSave }: Props) {
+export default function MatchTable({ session, players, isAdmin, onSave, deckImages, onDeckImageSave }: Props) {
   const [edited, setEdited] = useState<Match[]>(session.matches);
   const [saving, setSaving] = useState(false);
   const [toastState, setToastState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [pickerDeckName, setPickerDeckName] = useState<string | null>(null);
 
   useEffect(() => {
     if (toastState === 'saved' || toastState === 'error') {
@@ -146,14 +151,37 @@ export default function MatchTable({ session, players, isAdmin, onSave }: Props)
                   {/* 先攻デッキ */}
                   <td style={{ padding: '6px 8px', borderRight: '1px solid #f1f5f9' }}>
                     {isAdmin ? (
-                      <input
-                        list={datalistId}
-                        style={{ width: '100%', border: '1px solid #e2e8f0', borderRadius: '4px', padding: '4px 6px', fontSize: '0.875rem', background: '#fff', color: '#1e293b' }}
-                        value={match.firstPlayerDeck ?? ''}
-                        onChange={e => update(i, 'firstPlayerDeck', e.target.value)}
-                        placeholder="デッキテーマ"
-                        autoComplete="off"
-                      />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        {match.firstPlayerDeck && deckImages?.[match.firstPlayerDeck.trim()] && (
+                          <DeckImageFrame
+                            deckName={match.firstPlayerDeck}
+                            mapping={deckImages[match.firstPlayerDeck.trim()]}
+                            width={24} height={36}
+                          />
+                        )}
+                        <input
+                          list={datalistId}
+                          style={{ flex: 1, minWidth: 0, border: '1px solid #e2e8f0', borderRadius: '4px', padding: '4px 6px', fontSize: '0.875rem', background: '#fff', color: '#1e293b' }}
+                          value={match.firstPlayerDeck ?? ''}
+                          onChange={e => update(i, 'firstPlayerDeck', e.target.value)}
+                          placeholder="デッキテーマ"
+                          autoComplete="off"
+                        />
+                        <button
+                          type="button"
+                          disabled={!match.firstPlayerDeck?.trim()}
+                          onClick={() => setPickerDeckName(match.firstPlayerDeck!.trim())}
+                          title="表示画像を設定"
+                          style={{
+                            border: '1px solid #e2e8f0', borderRadius: '4px', background: '#fff',
+                            cursor: match.firstPlayerDeck?.trim() ? 'pointer' : 'default',
+                            padding: '4px 6px', fontSize: '0.875rem', flexShrink: 0,
+                            opacity: match.firstPlayerDeck?.trim() ? 1 : 0.4,
+                          }}
+                        >
+                          🖼️
+                        </button>
+                      </div>
                     ) : (
                       <span style={{ color: match.firstPlayerDeck ? '#475569' : '#cbd5e1' }}>
                         {match.firstPlayerDeck ?? '—'}
@@ -174,14 +202,37 @@ export default function MatchTable({ session, players, isAdmin, onSave }: Props)
                   {/* 後攻デッキ */}
                   <td style={{ padding: '6px 8px', borderRight: '1px solid #f1f5f9' }}>
                     {isAdmin ? (
-                      <input
-                        list={datalistId}
-                        style={{ width: '100%', border: '1px solid #e2e8f0', borderRadius: '4px', padding: '4px 6px', fontSize: '0.875rem', background: '#fff', color: '#1e293b' }}
-                        value={match.secondPlayerDeck ?? ''}
-                        onChange={e => update(i, 'secondPlayerDeck', e.target.value)}
-                        placeholder="デッキテーマ"
-                        autoComplete="off"
-                      />
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        {match.secondPlayerDeck && deckImages?.[match.secondPlayerDeck.trim()] && (
+                          <DeckImageFrame
+                            deckName={match.secondPlayerDeck}
+                            mapping={deckImages[match.secondPlayerDeck.trim()]}
+                            width={24} height={36}
+                          />
+                        )}
+                        <input
+                          list={datalistId}
+                          style={{ flex: 1, minWidth: 0, border: '1px solid #e2e8f0', borderRadius: '4px', padding: '4px 6px', fontSize: '0.875rem', background: '#fff', color: '#1e293b' }}
+                          value={match.secondPlayerDeck ?? ''}
+                          onChange={e => update(i, 'secondPlayerDeck', e.target.value)}
+                          placeholder="デッキテーマ"
+                          autoComplete="off"
+                        />
+                        <button
+                          type="button"
+                          disabled={!match.secondPlayerDeck?.trim()}
+                          onClick={() => setPickerDeckName(match.secondPlayerDeck!.trim())}
+                          title="表示画像を設定"
+                          style={{
+                            border: '1px solid #e2e8f0', borderRadius: '4px', background: '#fff',
+                            cursor: match.secondPlayerDeck?.trim() ? 'pointer' : 'default',
+                            padding: '4px 6px', fontSize: '0.875rem', flexShrink: 0,
+                            opacity: match.secondPlayerDeck?.trim() ? 1 : 0.4,
+                          }}
+                        >
+                          🖼️
+                        </button>
+                      </div>
                     ) : (
                       <span style={{ color: match.secondPlayerDeck ? '#475569' : '#cbd5e1' }}>
                         {match.secondPlayerDeck ?? '—'}
@@ -271,6 +322,15 @@ export default function MatchTable({ session, players, isAdmin, onSave }: Props)
             </span>
           )}
         </div>
+      )}
+
+      {pickerDeckName && onDeckImageSave && (
+        <DeckImagePicker
+          deckName={pickerDeckName}
+          initialMapping={deckImages?.[pickerDeckName]}
+          onSave={mapping => onDeckImageSave(pickerDeckName, mapping)}
+          onClose={() => setPickerDeckName(null)}
+        />
       )}
     </div>
   );

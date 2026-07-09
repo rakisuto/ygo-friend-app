@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import type { Season, Match, TeamKey } from '@/app/tournament/types';
+import type { Season, Match, TeamKey, DeckImageMap } from '@/app/tournament/types';
+import DeckImageFrame from '@/app/tournament/components/DeckImageFrame';
 
 function calcPoints(m: Match): number {
   if (!m.winnerId) return 0;
@@ -54,9 +55,9 @@ const tdStyle: React.CSSProperties = {
   whiteSpace: 'nowrap',
 };
 
-interface Props { season: Season }
+interface Props { season: Season; deckImages?: DeckImageMap }
 
-export default function TeamSessionTabs({ season }: Props) {
+export default function TeamSessionTabs({ season, deckImages }: Props) {
   const [activeTab, setActiveTab] = useState(0);
   const teamPoints = calcTeamPoints(season);
   const playerMap = Object.fromEntries(season.players.map(p => [p.id, p.teamPlayerName || p.name]));
@@ -187,9 +188,23 @@ export default function TeamSessionTabs({ season }: Props) {
                         >
                           <td style={{ ...tdStyle, fontWeight: 700, color: '#94a3b8' }}>第{match.matchNumber}R</td>
                           <td style={tdStyle}>{playerMap[match.firstPlayerId] || <span style={{ color: 'rgba(148,163,184,0.4)' }}>—</span>}</td>
-                          <td style={{ ...tdStyle, color: 'rgba(148,163,184,0.8)' }}>{match.firstPlayerDeck || <span style={{ color: 'rgba(148,163,184,0.4)' }}>—</span>}</td>
+                          <td style={{ ...tdStyle, whiteSpace: 'normal', padding: '8px 12px' }}>
+                            <DeckImageFrame
+                              deckName={match.firstPlayerDeck}
+                              mapping={match.firstPlayerDeck ? deckImages?.[match.firstPlayerDeck.trim()] : undefined}
+                              width={44} height={66}
+                              fallbackDark
+                            />
+                          </td>
                           <td style={tdStyle}>{playerMap[match.secondPlayerId] || <span style={{ color: 'rgba(148,163,184,0.4)' }}>—</span>}</td>
-                          <td style={{ ...tdStyle, color: 'rgba(148,163,184,0.8)' }}>{match.secondPlayerDeck || <span style={{ color: 'rgba(148,163,184,0.4)' }}>—</span>}</td>
+                          <td style={{ ...tdStyle, whiteSpace: 'normal', padding: '8px 12px' }}>
+                            <DeckImageFrame
+                              deckName={match.secondPlayerDeck}
+                              mapping={match.secondPlayerDeck ? deckImages?.[match.secondPlayerDeck.trim()] : undefined}
+                              width={44} height={66}
+                              fallbackDark
+                            />
+                          </td>
                           <td style={{ ...tdStyle, fontWeight: match.winnerId ? 700 : 400 }}>
                             {match.winnerId ? (
                               <span style={{ color: winnerTeam === 'A' ? '#60a5fa' : '#f87171' }}>
