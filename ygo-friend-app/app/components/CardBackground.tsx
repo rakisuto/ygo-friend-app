@@ -3,19 +3,7 @@
 import { useEffect, useState } from 'react';
 
 const PANEL_COUNT = 8;
-
-function getPanelClipPath(index: number, total: number): string {
-  const skew = 10; // percent
-  if (index === 0) {
-    // leftmost: flat left edge
-    return `polygon(0% 0%, ${100 - skew}% 0%, 100% 100%, 0% 100%)`;
-  }
-  if (index === total - 1) {
-    // rightmost: flat right edge
-    return `polygon(${skew}% 0%, 100% 0%, 100% 100%, 0% 100%)`;
-  }
-  return `polygon(${skew}% 0%, 100% 0%, ${100 - skew}% 100%, 0% 100%)`;
-}
+const SKEW_DEG = 6; // 斜め角度（度）
 
 export default function CardBackground() {
   const [images, setImages] = useState<string[]>([]);
@@ -49,7 +37,9 @@ export default function CardBackground() {
             style={{
               flex: 1,
               position: 'relative',
-              clipPath: getPanelClipPath(i, PANEL_COUNT),
+              overflow: 'hidden',
+              // skewX でパネルを傾ける — clip-path と違い隣接パネルと自然に重なるため白線が出ない
+              transform: `skewX(-${SKEW_DEG}deg)`,
             }}
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -57,11 +47,14 @@ export default function CardBackground() {
               src={src}
               alt=""
               style={{
-                width: '100%',
+                // skewX の逆補正 + 少し幅広にして傾いた端を埋める
+                width: '120%',
                 height: '100%',
+                marginLeft: '-10%',
                 objectFit: 'cover',
                 objectPosition: 'center top',
                 display: 'block',
+                transform: `skewX(${SKEW_DEG}deg)`,
               }}
             />
           </div>
@@ -73,7 +66,7 @@ export default function CardBackground() {
         style={{
           position: 'fixed',
           inset: 0,
-          background: 'rgba(0, 0, 0, 0.55)',
+          background: 'rgba(0, 0, 0, 0.52)',
           zIndex: 1,
         }}
       />
