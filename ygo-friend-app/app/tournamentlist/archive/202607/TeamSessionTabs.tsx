@@ -192,7 +192,7 @@ export default function TeamSessionTabs({ season, deckImages }: Props) {
                             <DeckImageFrame
                               deckName={match.firstPlayerDeck}
                               mapping={match.firstPlayerDeck ? deckImages?.[match.firstPlayerDeck.trim()] : undefined}
-                              width={44} height={66}
+                              width={92} height={58}
                               fallbackDark
                             />
                           </td>
@@ -201,7 +201,7 @@ export default function TeamSessionTabs({ season, deckImages }: Props) {
                             <DeckImageFrame
                               deckName={match.secondPlayerDeck}
                               mapping={match.secondPlayerDeck ? deckImages?.[match.secondPlayerDeck.trim()] : undefined}
-                              width={44} height={66}
+                              width={92} height={58}
                               fallbackDark
                             />
                           </td>

@@ -25,7 +25,7 @@ export async function PATCH(req: NextRequest) {
   try {
     const { deckName, mapping } = await req.json() as { deckName: string; mapping: DeckImageMap[string] | null };
     const current = (await kv.get<DeckImageMap>(KEY)) ?? {};
-    if (mapping) {
+    if (mapping && mapping.length > 0) {
       current[deckName] = mapping;
     } else {
       delete current[deckName];

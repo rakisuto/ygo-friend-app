@@ -156,7 +156,7 @@ export default function MatchTable({ session, players, isAdmin, onSave, deckImag
                           <DeckImageFrame
                             deckName={match.firstPlayerDeck}
                             mapping={deckImages[match.firstPlayerDeck.trim()]}
-                            width={24} height={36}
+                            width={44} height={28}
                           />
                         )}
                         <input
@@ -207,7 +207,7 @@ export default function MatchTable({ session, players, isAdmin, onSave, deckImag
                           <DeckImageFrame
                             deckName={match.secondPlayerDeck}
                             mapping={deckImages[match.secondPlayerDeck.trim()]}
-                            width={24} height={36}
+                            width={44} height={28}
                           />
                         )}
                         <input
