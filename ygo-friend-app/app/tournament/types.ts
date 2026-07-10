@@ -8,6 +8,7 @@ export interface Player {
   team?: TeamKey;
   teamPlayerName?: string;
   deckThemes?: Theme[];
+  iconPath?: string;
 }
 
 export interface Match {

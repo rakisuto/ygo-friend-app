@@ -46,6 +46,7 @@ export default function MatchTable({ session, players, isAdmin, onSave, deckImag
   }, [toastState]);
 
   const playerMap = Object.fromEntries(players.map(p => [p.id, p.name]));
+  const playerIconMap = Object.fromEntries(players.map(p => [p.id, p.iconPath]));
 
   const update = (index: number, field: keyof Match, value: string | null) => {
     setEdited(prev =>
@@ -142,7 +143,12 @@ export default function MatchTable({ session, players, isAdmin, onSave, deckImag
                     borderRight: '1px solid #dbeafe',
                     whiteSpace: 'nowrap',
                   }}>
-                    {firstWon && '🏆 '}{playerMap[match.firstPlayerId]}
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', justifyContent: 'center' }}>
+                      {playerIconMap[match.firstPlayerId] && (
+                        <img src={playerIconMap[match.firstPlayerId]} alt="" style={{ width: '20px', height: '20px', borderRadius: '4px', objectFit: 'cover', flexShrink: 0 }} />
+                      )}
+                      {firstWon && '🏆 '}{playerMap[match.firstPlayerId]}
+                    </span>
                   </td>
 
                   {/* 先攻デッキ */}
@@ -192,7 +198,12 @@ export default function MatchTable({ session, players, isAdmin, onSave, deckImag
                     borderRight: '1px solid #fee2e2',
                     whiteSpace: 'nowrap',
                   }}>
-                    {secondWon && '🏆 '}{playerMap[match.secondPlayerId]}
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', justifyContent: 'center' }}>
+                      {playerIconMap[match.secondPlayerId] && (
+                        <img src={playerIconMap[match.secondPlayerId]} alt="" style={{ width: '20px', height: '20px', borderRadius: '4px', objectFit: 'cover', flexShrink: 0 }} />
+                      )}
+                      {secondWon && '🏆 '}{playerMap[match.secondPlayerId]}
+                    </span>
                   </td>
 
                   {/* 後攻デッキ */}

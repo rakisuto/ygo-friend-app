@@ -24,7 +24,7 @@ export default function Navbar() {
       {/* Fixed header bar */}
       <header
         style={{
-          position: 'fixed', top: 0, left: 0, right: 0, zIndex: 100,
+          position: 'fixed', top: 0, left: 0, right: 0, zIndex: 1100,
           background: '#ffffff', borderBottom: '1px solid #e2e8f0',
           height: '52px', display: 'flex', alignItems: 'center',
           justifyContent: 'space-between', padding: '0 1rem',
@@ -63,7 +63,7 @@ export default function Navbar() {
           onClick={() => setOpen(false)}
           style={{
             position: 'fixed', inset: 0, background: 'rgba(15,23,42,0.35)',
-            zIndex: 200, backdropFilter: 'blur(2px)',
+            zIndex: 1150, backdropFilter: 'blur(2px)',
           }}
         />
       )}
@@ -71,7 +71,7 @@ export default function Navbar() {
       {/* Slide-in drawer */}
       <nav
         style={{
-          position: 'fixed', top: 0, right: 0, bottom: 0, zIndex: 300,
+          position: 'fixed', top: 0, right: 0, bottom: 0, zIndex: 1200,
           width: '260px', background: '#ffffff',
           boxShadow: '-6px 0 24px rgba(0,0,0,0.12)',
           transform: open ? 'translateX(0)' : 'translateX(100%)',

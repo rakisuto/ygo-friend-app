@@ -44,6 +44,24 @@ export async function POST(req: NextRequest) {
   }
 }
 
+export async function PATCH(req: NextRequest) {
+  const authError = checkAuth(req);
+  if (authError) return authError;
+  try {
+    const { id, label, layers } = await req.json() as { id: string; label: string; layers: DeckImageLayer[] };
+    const library = (await kv.get<DeckImageLibrary>(LIBRARY_KEY)) ?? [];
+    const index = library.findIndex(p => p.id === id);
+    if (index === -1) return NextResponse.json({ error: 'Preset not found' }, { status: 404 });
+    library[index] = { id, label: label.trim() || '無題', layers };
+    await kv.set(LIBRARY_KEY, library);
+    revalidatePath('/tournamentlist/archive/202607');
+    return NextResponse.json(library[index]);
+  } catch (e) {
+    const message = e instanceof Error ? e.message : String(e);
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}
+
 export async function DELETE(req: NextRequest) {
   const authError = checkAuth(req);
   if (authError) return authError;

@@ -61,6 +61,7 @@ export default function TeamSessionTabs({ season, deckImages, deckImageLibrary }
   const [activeTab, setActiveTab] = useState(0);
   const teamPoints = calcTeamPoints(season);
   const playerMap = Object.fromEntries(season.players.map(p => [p.id, p.teamPlayerName || p.name]));
+  const playerIconMap = Object.fromEntries(season.players.map(p => [p.id, p.iconPath]));
 
   const resolveLayers = (deckName: string | null) => {
     if (!deckName) return undefined;
@@ -194,7 +195,18 @@ export default function TeamSessionTabs({ season, deckImages, deckImageLibrary }
                           }}
                         >
                           <td style={{ ...tdStyle, fontWeight: 700, color: '#94a3b8' }}>第{match.matchNumber}R</td>
-                          <td style={tdStyle}>{playerMap[match.firstPlayerId] || <span style={{ color: 'rgba(148,163,184,0.4)' }}>—</span>}</td>
+                          <td style={tdStyle}>
+                            {playerMap[match.firstPlayerId] ? (
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                                {playerIconMap[match.firstPlayerId] && (
+                                  <img src={playerIconMap[match.firstPlayerId]} alt="" style={{ width: '20px', height: '20px', borderRadius: '4px', objectFit: 'cover', flexShrink: 0 }} />
+                                )}
+                                {playerMap[match.firstPlayerId]}
+                              </span>
+                            ) : (
+                              <span style={{ color: 'rgba(148,163,184,0.4)' }}>—</span>
+                            )}
+                          </td>
                           <td style={{ ...tdStyle, whiteSpace: 'normal', padding: '8px 10px' }}>
                             <DeckImageFrame
                               deckName={match.firstPlayerDeck}
@@ -203,7 +215,18 @@ export default function TeamSessionTabs({ season, deckImages, deckImageLibrary }
                               fallbackDark
                             />
                           </td>
-                          <td style={tdStyle}>{playerMap[match.secondPlayerId] || <span style={{ color: 'rgba(148,163,184,0.4)' }}>—</span>}</td>
+                          <td style={tdStyle}>
+                            {playerMap[match.secondPlayerId] ? (
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
+                                {playerIconMap[match.secondPlayerId] && (
+                                  <img src={playerIconMap[match.secondPlayerId]} alt="" style={{ width: '20px', height: '20px', borderRadius: '4px', objectFit: 'cover', flexShrink: 0 }} />
+                                )}
+                                {playerMap[match.secondPlayerId]}
+                              </span>
+                            ) : (
+                              <span style={{ color: 'rgba(148,163,184,0.4)' }}>—</span>
+                            )}
+                          </td>
                           <td style={{ ...tdStyle, whiteSpace: 'normal', padding: '8px 10px' }}>
                             <DeckImageFrame
                               deckName={match.secondPlayerDeck}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import { generateTeamSeason } from '@/lib/tournament/generator';
 import type { Match, Season, TeamKey, DeckImageMap, DeckImageLibrary, DeckImageLayer } from '../../types';
 import type { Theme } from '@/app/types/draft';
@@ -113,6 +114,7 @@ function TeamSettingsFields({
   playerTeams, onPlayerTeamChange,
   teamPlayerNames, onTeamPlayerNameChange,
   playerDeckThemes, onPlayerDeckThemesChange,
+  playerIcons, onPlayerIconChange, availableIcons,
   themes,
 }: {
   playerNames: string[];
@@ -124,6 +126,9 @@ function TeamSettingsFields({
   onTeamPlayerNameChange: (index: number, value: string) => void;
   playerDeckThemes: Theme[][];
   onPlayerDeckThemesChange: (index: number, themes: Theme[]) => void;
+  playerIcons: (string | undefined)[];
+  onPlayerIconChange: (index: number, iconPath: string | null) => void;
+  availableIcons: string[];
   themes: Theme[];
 }) {
   return (
@@ -172,6 +177,37 @@ function TeamSettingsFields({
                     ))}
                   </select>
                 </div>
+
+                {/* アイコン選択 */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px', flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: '0.75rem', color: '#94a3b8', flexShrink: 0 }}>アイコン:</span>
+                  <button
+                    type="button"
+                    onClick={() => onPlayerIconChange(i, null)}
+                    style={{
+                      width: '32px', height: '32px', borderRadius: '6px',
+                      border: !playerIcons[i] ? '2px solid #2563eb' : '1px solid #d1d5db',
+                      background: '#f8fafc', cursor: 'pointer', fontSize: '0.625rem', color: '#94a3b8',
+                    }}
+                  >
+                    なし
+                  </button>
+                  {availableIcons.map(icon => (
+                    <button
+                      key={icon}
+                      type="button"
+                      onClick={() => onPlayerIconChange(i, icon)}
+                      style={{
+                        width: '32px', height: '32px', borderRadius: '6px', overflow: 'hidden', padding: 0,
+                        border: playerIcons[i] === icon ? '2px solid #2563eb' : '1px solid #d1d5db',
+                        cursor: 'pointer', background: '#fff',
+                      }}
+                    >
+                      <img src={icon} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    </button>
+                  ))}
+                </div>
+
                 <input
                   value={teamPlayerNames[i] ?? ''}
                   onChange={e => onTeamPlayerNameChange(i, e.target.value)}
@@ -267,6 +303,7 @@ export default function AdminPage() {
   const [playerTeams, setPlayerTeams] = useState<TeamKey[]>(['A', 'A', 'B', 'B']);
   const [teamPlayerNames, setTeamPlayerNames] = useState<string[]>(['', '', '', '']);
   const [playerDeckThemes, setPlayerDeckThemes] = useState<Theme[][]>([[], [], [], []]);
+  const [playerIcons, setPlayerIcons] = useState<(string | undefined)[]>([undefined, undefined, undefined, undefined]);
   const [generating, setGenerating] = useState(false);
   const [genError, setGenError] = useState('');
 
@@ -283,11 +320,13 @@ export default function AdminPage() {
   const [editPlayerTeams, setEditPlayerTeams] = useState<TeamKey[]>([]);
   const [editTeamPlayerNames, setEditTeamPlayerNames] = useState<string[]>([]);
   const [editPlayerDeckThemes, setEditPlayerDeckThemes] = useState<Theme[][]>([]);
+  const [editPlayerIcons, setEditPlayerIcons] = useState<(string | undefined)[]>([]);
   const [infoToast, setInfoToast] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
 
   const [themes, setThemes] = useState<Theme[]>([]);
   const [deckImages, setDeckImages] = useState<DeckImageMap>({});
   const [deckImageLibrary, setDeckImageLibrary] = useState<DeckImageLibrary>([]);
+  const [availableIcons, setAvailableIcons] = useState<string[]>([]);
 
   useEffect(() => {
     if (season) setDescription(season.description ?? '');
@@ -319,6 +358,13 @@ export default function AdminPage() {
       .then(r => r.json())
       .then(data => setDeckImageLibrary(Array.isArray(data) ? data : []))
       .catch(() => setDeckImageLibrary([]));
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/player-icons')
+      .then(r => r.json())
+      .then(data => setAvailableIcons(Array.isArray(data.icons) ? data.icons : []))
+      .catch(() => setAvailableIcons([]));
   }, []);
 
   const handlePinSubmit = () => {
@@ -385,6 +431,7 @@ export default function AdminPage() {
           ...p,
           teamPlayerName: teamPlayerNames[i].trim(),
           deckThemes: playerDeckThemes[i],
+          iconPath: playerIcons[i],
         })),
       };
       const res = await adminFetch('/api/tournament/202607', { method: 'POST', body: JSON.stringify(newSeason) });
@@ -426,6 +473,7 @@ export default function AdminPage() {
     setEditPlayerTeams(season.players.map((p, i) => p.team ?? (i < half ? 'A' : 'B')));
     setEditTeamPlayerNames(season.players.map(p => p.teamPlayerName ?? ''));
     setEditPlayerDeckThemes(season.players.map(p => p.deckThemes ?? []));
+    setEditPlayerIcons(season.players.map(p => p.iconPath));
     setInfoToast('idle');
     setEditingInfo(true);
   };
@@ -442,6 +490,7 @@ export default function AdminPage() {
         team: editPlayerTeams[i],
         teamPlayerName: editTeamPlayerNames[i].trim(),
         deckThemes: editPlayerDeckThemes[i],
+        iconPath: editPlayerIcons[i],
       }));
       const res = await adminFetch('/api/tournament/202607', {
         method: 'PATCH',
@@ -591,6 +640,9 @@ export default function AdminPage() {
             onTeamPlayerNameChange={(i, value) => setTeamPlayerNames(prev => prev.map((n, j) => j === i ? value : n))}
             playerDeckThemes={playerDeckThemes}
             onPlayerDeckThemesChange={(i, list) => setPlayerDeckThemes(prev => prev.map((l, j) => j === i ? list : l))}
+            playerIcons={playerIcons}
+            onPlayerIconChange={(i, icon) => setPlayerIcons(prev => prev.map((v, j) => j === i ? (icon ?? undefined) : v))}
+            availableIcons={availableIcons}
             themes={themes}
           />
         </Card>
@@ -681,6 +733,9 @@ export default function AdminPage() {
               onTeamPlayerNameChange={(i, value) => setEditTeamPlayerNames(prev => prev.map((n, j) => j === i ? value : n))}
               playerDeckThemes={editPlayerDeckThemes}
               onPlayerDeckThemesChange={(i, list) => setEditPlayerDeckThemes(prev => prev.map((l, j) => j === i ? list : l))}
+              playerIcons={editPlayerIcons}
+              onPlayerIconChange={(i, icon) => setEditPlayerIcons(prev => prev.map((v, j) => j === i ? (icon ?? undefined) : v))}
+              availableIcons={availableIcons}
               themes={themes}
             />
 
@@ -737,6 +792,11 @@ export default function AdminPage() {
               )}
             </div>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0 }}>
+              <Link href="/tournament/admin/202607/deck-images" style={{ textDecoration: 'none' }}>
+                <HoverButton variant="ghost">
+                  🖼️ 画像ライブラリ
+                </HoverButton>
+              </Link>
               <HoverButton onClick={handleInfoEdit} variant="ghost">
                 ✏️ 編集
               </HoverButton>
