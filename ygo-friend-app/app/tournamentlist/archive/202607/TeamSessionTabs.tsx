@@ -39,26 +39,48 @@ const teamConfig: Record<TeamKey, { gradient: string; accent: string }> = {
 };
 
 const thStyle: React.CSSProperties = {
-  padding: '12px 12px',
-  textAlign: 'left',
+  padding: '6px 4px',
+  textAlign: 'center',
   color: 'rgba(148,163,184,0.9)',
   fontWeight: 700,
-  whiteSpace: 'nowrap',
-  fontSize: '0.75rem',
+  fontSize: '0.625rem',
   textTransform: 'uppercase',
-  letterSpacing: '0.06em',
+  letterSpacing: '0.02em',
+  overflow: 'hidden',
 };
 const tdStyle: React.CSSProperties = {
-  padding: '12px 12px',
+  padding: '6px 4px',
   color: 'rgba(226,232,240,0.95)',
-  fontSize: '0.875rem',
-  whiteSpace: 'nowrap',
+  fontSize: '0.8125rem',
+  textAlign: 'center',
+  overflow: 'hidden',
 };
+
+function PlayerCell({ name, iconPath }: { name?: string; iconPath?: string }) {
+  if (!name) return <span style={{ color: 'rgba(148,163,184,0.4)' }}>—</span>;
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+      {iconPath && (
+        <img src={iconPath} alt="" style={{ width: '26px', height: '26px', borderRadius: '6px', objectFit: 'cover', flexShrink: 0 }} />
+      )}
+      <span
+        title={name}
+        style={{
+          fontSize: '0.625rem', color: 'rgba(226,232,240,0.85)',
+          maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+        }}
+      >
+        {name}
+      </span>
+    </div>
+  );
+}
 
 interface Props { season: Season; deckImages?: DeckImageMap; deckImageLibrary?: DeckImageLibrary }
 
 export default function TeamSessionTabs({ season, deckImages, deckImageLibrary }: Props) {
   const [activeTab, setActiveTab] = useState(0);
+  const [zoom, setZoom] = useState(100);
   const teamPoints = calcTeamPoints(season);
   const playerMap = Object.fromEntries(season.players.map(p => [p.id, p.teamPlayerName || p.name]));
   const playerIconMap = Object.fromEntries(season.players.map(p => [p.id, p.iconPath]));
@@ -159,23 +181,42 @@ export default function TeamSessionTabs({ season, deckImages, deckImageLibrary }
         return (
           <div key={session.id} style={{ display: activeTab === i ? 'block' : 'none' }}>
             <div style={{ ...glass, overflow: 'hidden', marginBottom: '12px' }}>
-              <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '1rem' }}>🏟️</span>
-                <h2 style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#f1f5f9', margin: 0, letterSpacing: '0.02em' }}>
-                  試合結果
-                </h2>
+              <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '1rem' }}>🏟️</span>
+                  <h2 style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#f1f5f9', margin: 0, letterSpacing: '0.02em' }}>
+                    試合結果
+                  </h2>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontSize: '0.6875rem', color: 'rgba(148,163,184,0.7)' }}>表示サイズ</span>
+                  <button
+                    type="button"
+                    onClick={() => setZoom(z => Math.max(50, z - 10))}
+                    style={{ width: '22px', height: '22px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.06)', color: '#e2e8f0', cursor: 'pointer', fontSize: '0.75rem', lineHeight: 1 }}
+                  >
+                    －
+                  </button>
+                  <span style={{ fontSize: '0.6875rem', color: '#e2e8f0', minWidth: '32px', textAlign: 'center' }}>{zoom}%</span>
+                  <button
+                    type="button"
+                    onClick={() => setZoom(z => Math.min(150, z + 10))}
+                    style={{ width: '22px', height: '22px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.2)', background: 'rgba(255,255,255,0.06)', color: '#e2e8f0', cursor: 'pointer', fontSize: '0.75rem', lineHeight: 1 }}
+                  >
+                    ＋
+                  </button>
+                </div>
               </div>
-              <div className="table-scroll">
-                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '640px' }} className="gothic">
+              <div className="table-scroll" style={{ zoom: `${zoom}%` }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', tableLayout: 'fixed' }} className="gothic">
                   <thead>
                     <tr style={{ background: 'rgba(255,255,255,0.04)' }}>
-                      <th style={thStyle}>ラウンド</th>
-                      <th style={thStyle}>先攻</th>
-                      <th style={{ ...thStyle, minWidth: '220px', width: '28%' }}>先攻デッキ</th>
-                      <th style={thStyle}>後攻</th>
-                      <th style={{ ...thStyle, minWidth: '220px', width: '28%' }}>後攻デッキ</th>
-                      <th style={thStyle}>勝者</th>
-                      <th style={{ ...thStyle, textAlign: 'center' }}>勝ち点</th>
+                      <th style={{ ...thStyle, width: '9%' }}>R</th>
+                      <th style={{ ...thStyle, width: '13%' }}>先攻</th>
+                      <th style={{ ...thStyle, width: '26%' }}>先攻デッキ</th>
+                      <th style={{ ...thStyle, width: '13%' }}>後攻</th>
+                      <th style={{ ...thStyle, width: '26%' }}>後攻デッキ</th>
+                      <th style={{ ...thStyle, width: '13%' }}>勝者</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -194,69 +235,46 @@ export default function TeamSessionTabs({ season, deckImages, deckImageLibrary }
                             background: idx % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.03)',
                           }}
                         >
-                          <td style={{ ...tdStyle, fontWeight: 700, color: '#94a3b8' }}>第{match.matchNumber}R</td>
+                          <td style={{ ...tdStyle, fontWeight: 700, color: '#94a3b8' }}>R{match.matchNumber}</td>
                           <td style={tdStyle}>
-                            {playerMap[match.firstPlayerId] ? (
-                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-                                {playerIconMap[match.firstPlayerId] && (
-                                  <img src={playerIconMap[match.firstPlayerId]} alt="" style={{ width: '20px', height: '20px', borderRadius: '4px', objectFit: 'cover', flexShrink: 0 }} />
-                                )}
-                                {playerMap[match.firstPlayerId]}
-                              </span>
-                            ) : (
-                              <span style={{ color: 'rgba(148,163,184,0.4)' }}>—</span>
-                            )}
+                            <PlayerCell name={playerMap[match.firstPlayerId]} iconPath={playerIconMap[match.firstPlayerId]} />
                           </td>
-                          <td style={{ ...tdStyle, whiteSpace: 'normal', padding: '8px 10px' }}>
+                          <td style={{ ...tdStyle, padding: '4px 3px' }}>
                             <DeckImageFrame
                               deckName={match.firstPlayerDeck}
                               mapping={resolveLayers(match.firstPlayerDeck)}
-                              width="100%" height={74}
+                              width="100%" height={56}
                               fallbackDark
                             />
                           </td>
                           <td style={tdStyle}>
-                            {playerMap[match.secondPlayerId] ? (
-                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-                                {playerIconMap[match.secondPlayerId] && (
-                                  <img src={playerIconMap[match.secondPlayerId]} alt="" style={{ width: '20px', height: '20px', borderRadius: '4px', objectFit: 'cover', flexShrink: 0 }} />
-                                )}
-                                {playerMap[match.secondPlayerId]}
-                              </span>
-                            ) : (
-                              <span style={{ color: 'rgba(148,163,184,0.4)' }}>—</span>
-                            )}
+                            <PlayerCell name={playerMap[match.secondPlayerId]} iconPath={playerIconMap[match.secondPlayerId]} />
                           </td>
-                          <td style={{ ...tdStyle, whiteSpace: 'normal', padding: '8px 10px' }}>
+                          <td style={{ ...tdStyle, padding: '4px 3px' }}>
                             <DeckImageFrame
                               deckName={match.secondPlayerDeck}
                               mapping={resolveLayers(match.secondPlayerDeck)}
-                              width="100%" height={74}
+                              width="100%" height={56}
                               fallbackDark
                             />
                           </td>
-                          <td style={{ ...tdStyle, fontWeight: match.winnerId ? 700 : 400 }}>
+                          <td style={tdStyle}>
                             {match.winnerId ? (
-                              <span style={{ color: winnerTeam === 'A' ? '#60a5fa' : '#f87171' }}>
-                                {playerMap[match.winnerId]}
-                              </span>
-                            ) : (
-                              <span style={{ color: 'rgba(148,163,184,0.4)' }}>—</span>
-                            )}
-                          </td>
-                          <td style={{ ...tdStyle, textAlign: 'center', fontWeight: 700 }}>
-                            {match.winnerId ? (
-                              <span style={{
-                                display: 'inline-block',
-                                background: winnerTeam === 'A' ? 'rgba(37,99,235,0.35)' : 'rgba(220,38,38,0.35)',
-                                color: winnerTeam === 'A' ? '#93c5fd' : '#fca5a5',
-                                border: `1px solid ${winnerTeam === 'A' ? '#3b82f6' : '#ef4444'}50`,
-                                borderRadius: '6px',
-                                padding: '2px 12px',
-                                fontSize: '0.875rem',
-                              }}>
-                                {pts}点
-                              </span>
+                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+                                <PlayerCell name={playerMap[match.winnerId]} iconPath={playerIconMap[match.winnerId]} />
+                                <span style={{
+                                  display: 'inline-block',
+                                  background: winnerTeam === 'A' ? 'rgba(37,99,235,0.35)' : 'rgba(220,38,38,0.35)',
+                                  color: winnerTeam === 'A' ? '#93c5fd' : '#fca5a5',
+                                  border: `1px solid ${winnerTeam === 'A' ? '#3b82f6' : '#ef4444'}50`,
+                                  borderRadius: '999px',
+                                  padding: '0 8px',
+                                  fontSize: '0.625rem',
+                                  fontWeight: 700,
+                                }}>
+                                  {pts}点
+                                </span>
+                              </div>
                             ) : (
                               <span style={{ color: 'rgba(148,163,184,0.4)' }}>—</span>
                             )}
