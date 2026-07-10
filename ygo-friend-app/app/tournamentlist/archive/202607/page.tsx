@@ -1,12 +1,11 @@
 import { kv } from '@/lib/kv';
 import type { Season, DeckImageMap, DeckImageLibrary } from '@/app/tournament/types';
 import ArchiveTabs from './ArchiveTabs';
-import DescriptionAccordion from './DescriptionAccordion';
 
 export const revalidate = 0;
 
-type Tab = 'result' | 'player' | 'overall';
-const VALID_TABS: Tab[] = ['result', 'player', 'overall'];
+type Tab = 'description' | 'result' | 'player' | 'overall';
+const VALID_TABS: Tab[] = ['description', 'result', 'player', 'overall'];
 
 function parseTab(raw: string | undefined): Tab {
   if (raw && (VALID_TABS as string[]).includes(raw)) return raw as Tab;
@@ -52,10 +51,7 @@ export default async function Archive202607Page({ searchParams }: PageProps) {
       </div>
 
       {season ? (
-        <>
-          <DescriptionAccordion description={season.description} />
-          <ArchiveTabs season={season} activeTab={activeTab} deckImages={deckImages} deckImageLibrary={deckImageLibrary} />
-        </>
+        <ArchiveTabs season={season} activeTab={activeTab} deckImages={deckImages} deckImageLibrary={deckImageLibrary} />
       ) : (
         <p style={{ color: 'rgba(255,255,255,0.85)', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>
           スケジュールはまだ生成されていません。
