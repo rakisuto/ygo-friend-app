@@ -9,6 +9,12 @@ function calcPoints(m: Match): number {
   return m.winnerId === m.secondPlayerId ? 2 : 1;
 }
 
+/** その試合でそのプレイヤーが獲得した勝ち点(結果なし/敗北は0)。 */
+function pointsForPlayer(m: Match, playerId: string): number {
+  if (m.winnerId !== playerId) return 0;
+  return calcPoints(m);
+}
+
 function calcTeamPoints(season: Season): { A: number; B: number } {
   const teamOf = new Map(season.players.map(p => [p.id, p.team]));
   return season.sessions.flatMap(s => s.matches).reduce(
@@ -56,18 +62,30 @@ const tdStyle: React.CSSProperties = {
   overflow: 'hidden',
 };
 
-function PlayerCell({ name, iconPath }: { name?: string; iconPath?: string }) {
+function PlayerCell({ name, iconPath, points }: { name?: string; iconPath?: string; points?: number }) {
   if (!name) return <span style={{ color: 'rgba(148,163,184,0.4)' }}>—</span>;
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-      {iconPath && (
-        <img src={iconPath} alt="" style={{ width: '26px', height: '26px', borderRadius: '6px', objectFit: 'cover', flexShrink: 0 }} />
-      )}
+      <div style={{ position: 'relative' }}>
+        {iconPath && (
+          <img src={iconPath} alt="" style={{ width: '26px', height: '26px', borderRadius: '6px', objectFit: 'cover', flexShrink: 0, display: 'block' }} />
+        )}
+        {points !== undefined && (
+          <span style={{
+            position: 'absolute', bottom: '-5px', right: '-6px',
+            background: points > 0 ? '#16a34a' : 'rgba(100,116,139,0.9)',
+            color: '#fff', borderRadius: '999px', fontSize: '0.5625rem', fontWeight: 700,
+            padding: '0 4px', lineHeight: '1.3', border: '1px solid rgba(15,23,42,0.6)',
+          }}>
+            {points}
+          </span>
+        )}
+      </div>
       <span
-        title={name}
         style={{
           fontSize: '0.625rem', color: 'rgba(226,232,240,0.85)',
-          maxWidth: '100%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+          maxWidth: '100%', whiteSpace: 'normal', overflowWrap: 'anywhere', wordBreak: 'break-word',
+          lineHeight: 1.2, textAlign: 'center',
         }}
       >
         {name}
@@ -237,7 +255,11 @@ export default function TeamSessionTabs({ season, deckImages, deckImageLibrary }
                         >
                           <td style={{ ...tdStyle, fontWeight: 700, color: '#94a3b8' }}>R{match.matchNumber}</td>
                           <td style={tdStyle}>
-                            <PlayerCell name={playerMap[match.firstPlayerId]} iconPath={playerIconMap[match.firstPlayerId]} />
+                            <PlayerCell
+                              name={playerMap[match.firstPlayerId]}
+                              iconPath={playerIconMap[match.firstPlayerId]}
+                              points={pointsForPlayer(match, match.firstPlayerId)}
+                            />
                           </td>
                           <td style={{ ...tdStyle, padding: '4px 3px' }}>
                             <DeckImageFrame
@@ -248,7 +270,11 @@ export default function TeamSessionTabs({ season, deckImages, deckImageLibrary }
                             />
                           </td>
                           <td style={tdStyle}>
-                            <PlayerCell name={playerMap[match.secondPlayerId]} iconPath={playerIconMap[match.secondPlayerId]} />
+                            <PlayerCell
+                              name={playerMap[match.secondPlayerId]}
+                              iconPath={playerIconMap[match.secondPlayerId]}
+                              points={pointsForPlayer(match, match.secondPlayerId)}
+                            />
                           </td>
                           <td style={{ ...tdStyle, padding: '4px 3px' }}>
                             <DeckImageFrame
