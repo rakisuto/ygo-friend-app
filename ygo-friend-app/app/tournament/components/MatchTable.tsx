@@ -1,8 +1,7 @@
 ﻿'use client';
 
 import { useState, useEffect } from 'react';
-import type { Match, Player, Session, DeckImageMap, DeckImageMapping } from '../types';
-import { DECK_THEMES } from '@/data/deckThemes';
+import type { Match, Player, Session, DeckImageMap, DeckImageLibrary, DeckImageLayer } from '../types';
 import DeckImageFrame from './DeckImageFrame';
 import DeckImagePicker from './DeckImagePicker';
 
@@ -12,7 +11,9 @@ interface Props {
   isAdmin?: boolean;
   onSave?: (matches: Match[]) => Promise<void>;
   deckImages?: DeckImageMap;
-  onDeckImageSave?: (deckName: string, mapping: DeckImageMapping | null) => Promise<void>;
+  deckImageLibrary?: DeckImageLibrary;
+  onDeckImageBind?: (deckName: string, presetId: string | null) => Promise<void>;
+  onDeckImageCreate?: (deckName: string, label: string, layers: DeckImageLayer[]) => Promise<void>;
 }
 
 const COL = {
@@ -24,11 +25,18 @@ const COL = {
   numHeader:    { background: '#374151', color: '#ffffff', padding: '8px 10px', textAlign: 'center' as const, width: '40px' },
 };
 
-export default function MatchTable({ session, players, isAdmin, onSave, deckImages, onDeckImageSave }: Props) {
+export default function MatchTable({ session, players, isAdmin, onSave, deckImages, deckImageLibrary, onDeckImageBind, onDeckImageCreate }: Props) {
   const [edited, setEdited] = useState<Match[]>(session.matches);
   const [saving, setSaving] = useState(false);
   const [toastState, setToastState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [pickerDeckName, setPickerDeckName] = useState<string | null>(null);
+
+  const resolveLayers = (deckName: string | null | undefined) => {
+    if (!deckName) return undefined;
+    const presetId = deckImages?.[deckName.trim()];
+    if (!presetId) return undefined;
+    return deckImageLibrary?.find(p => p.id === presetId)?.layers;
+  };
 
   useEffect(() => {
     if (toastState === 'saved' || toastState === 'error') {
@@ -38,8 +46,6 @@ export default function MatchTable({ session, players, isAdmin, onSave, deckImag
   }, [toastState]);
 
   const playerMap = Object.fromEntries(players.map(p => [p.id, p.name]));
-  // datalist は session ごとに一意な id を使う
-  const datalistId = `deck-themes-${session.id}`;
 
   const update = (index: number, field: keyof Match, value: string | null) => {
     setEdited(prev =>
@@ -89,15 +95,6 @@ export default function MatchTable({ session, players, isAdmin, onSave, deckImag
 
   return (
     <div>
-      {/* デッキテーマ予測変換用 datalist */}
-      {isAdmin && (
-        <datalist id={datalistId}>
-          {DECK_THEMES.map(theme => (
-            <option key={theme} value={theme} />
-          ))}
-        </datalist>
-      )}
-
       {isAdmin && (
         <div style={{ marginBottom: '10px', display: 'flex', justifyContent: 'flex-end' }}>
           <button
@@ -152,15 +149,14 @@ export default function MatchTable({ session, players, isAdmin, onSave, deckImag
                   <td style={{ padding: '6px 8px', borderRight: '1px solid #f1f5f9' }}>
                     {isAdmin ? (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        {match.firstPlayerDeck && deckImages?.[match.firstPlayerDeck.trim()] && (
+                        {resolveLayers(match.firstPlayerDeck) && (
                           <DeckImageFrame
                             deckName={match.firstPlayerDeck}
-                            mapping={deckImages[match.firstPlayerDeck.trim()]}
+                            mapping={resolveLayers(match.firstPlayerDeck)}
                             width={44} height={28}
                           />
                         )}
                         <input
-                          list={datalistId}
                           style={{ flex: 1, minWidth: 0, border: '1px solid #e2e8f0', borderRadius: '4px', padding: '4px 6px', fontSize: '0.875rem', background: '#fff', color: '#1e293b' }}
                           value={match.firstPlayerDeck ?? ''}
                           onChange={e => update(i, 'firstPlayerDeck', e.target.value)}
@@ -203,15 +199,14 @@ export default function MatchTable({ session, players, isAdmin, onSave, deckImag
                   <td style={{ padding: '6px 8px', borderRight: '1px solid #f1f5f9' }}>
                     {isAdmin ? (
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        {match.secondPlayerDeck && deckImages?.[match.secondPlayerDeck.trim()] && (
+                        {resolveLayers(match.secondPlayerDeck) && (
                           <DeckImageFrame
                             deckName={match.secondPlayerDeck}
-                            mapping={deckImages[match.secondPlayerDeck.trim()]}
+                            mapping={resolveLayers(match.secondPlayerDeck)}
                             width={44} height={28}
                           />
                         )}
                         <input
-                          list={datalistId}
                           style={{ flex: 1, minWidth: 0, border: '1px solid #e2e8f0', borderRadius: '4px', padding: '4px 6px', fontSize: '0.875rem', background: '#fff', color: '#1e293b' }}
                           value={match.secondPlayerDeck ?? ''}
                           onChange={e => update(i, 'secondPlayerDeck', e.target.value)}
@@ -324,11 +319,13 @@ export default function MatchTable({ session, players, isAdmin, onSave, deckImag
         </div>
       )}
 
-      {pickerDeckName && onDeckImageSave && (
+      {pickerDeckName && onDeckImageBind && onDeckImageCreate && (
         <DeckImagePicker
           deckName={pickerDeckName}
-          initialMapping={deckImages?.[pickerDeckName]}
-          onSave={mapping => onDeckImageSave(pickerDeckName, mapping)}
+          library={deckImageLibrary ?? []}
+          currentPresetId={deckImages?.[pickerDeckName]}
+          onBindExisting={presetId => onDeckImageBind(pickerDeckName, presetId)}
+          onCreateNew={(label, layers) => onDeckImageCreate(pickerDeckName, label, layers)}
           onClose={() => setPickerDeckName(null)}
         />
       )}

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { generateTeamSeason } from '@/lib/tournament/generator';
-import type { Match, Season, TeamKey, DeckImageMap, DeckImageMapping } from '../../types';
+import type { Match, Season, TeamKey, DeckImageMap, DeckImageLibrary, DeckImageLayer } from '../../types';
 import type { Theme } from '@/app/types/draft';
 import SessionTabs from '../../components/SessionTabs';
 
@@ -287,6 +287,7 @@ export default function AdminPage() {
 
   const [themes, setThemes] = useState<Theme[]>([]);
   const [deckImages, setDeckImages] = useState<DeckImageMap>({});
+  const [deckImageLibrary, setDeckImageLibrary] = useState<DeckImageLibrary>([]);
 
   useEffect(() => {
     if (season) setDescription(season.description ?? '');
@@ -313,6 +314,13 @@ export default function AdminPage() {
       .catch(() => setDeckImages({}));
   }, []);
 
+  useEffect(() => {
+    fetch('/api/tournament/202607/deck-image-library')
+      .then(r => r.json())
+      .then(data => setDeckImageLibrary(Array.isArray(data) ? data : []))
+      .catch(() => setDeckImageLibrary([]));
+  }, []);
+
   const handlePinSubmit = () => {
     if (!pinInput.trim()) return;
     setPin(pinInput.trim());
@@ -335,18 +343,30 @@ export default function AdminPage() {
       },
     });
 
-  const handleDeckImageSave = async (deckName: string, mapping: DeckImageMapping | null) => {
+  const handleDeckImageBind = async (deckName: string, presetId: string | null) => {
     const res = await adminFetch('/api/tournament/202607/deck-images', {
       method: 'PATCH',
-      body: JSON.stringify({ deckName, mapping }),
+      body: JSON.stringify({ deckName, presetId }),
     });
     if (res.status === 401) { handleUnauthorized(); return; }
     if (!res.ok) return;
     setDeckImages(prev => {
       const next = { ...prev };
-      if (mapping) next[deckName] = mapping; else delete next[deckName];
+      if (presetId) next[deckName] = presetId; else delete next[deckName];
       return next;
     });
+  };
+
+  const handleDeckImageCreate = async (deckName: string, label: string, layers: DeckImageLayer[]) => {
+    const res = await adminFetch('/api/tournament/202607/deck-image-library', {
+      method: 'POST',
+      body: JSON.stringify({ label, layers }),
+    });
+    if (res.status === 401) { handleUnauthorized(); return; }
+    if (!res.ok) return;
+    const preset = await res.json();
+    setDeckImageLibrary(prev => [...prev, preset]);
+    await handleDeckImageBind(deckName, preset.id);
   };
 
   const handleGenerate = async () => {
@@ -796,7 +816,9 @@ export default function AdminPage() {
           onSessionSave={handleSessionSave}
           onDateChange={handleDateChange}
           deckImages={deckImages}
-          onDeckImageSave={handleDeckImageSave}
+          deckImageLibrary={deckImageLibrary}
+          onDeckImageBind={handleDeckImageBind}
+          onDeckImageCreate={handleDeckImageCreate}
         />
       </Card>
 

@@ -1,7 +1,7 @@
 ﻿'use client';
 
 import { useState } from 'react';
-import type { Match, Season, DeckImageMap, DeckImageMapping } from '../types';
+import type { Match, Season, DeckImageMap, DeckImageLibrary, DeckImageLayer } from '../types';
 import MatchTable from './MatchTable';
 
 interface Props {
@@ -10,7 +10,9 @@ interface Props {
   onSessionSave?: (sessionId: string, matches: Match[]) => Promise<void>;
   onDateChange?: (sessionId: string, date: string) => Promise<void>;
   deckImages?: DeckImageMap;
-  onDeckImageSave?: (deckName: string, mapping: DeckImageMapping | null) => Promise<void>;
+  deckImageLibrary?: DeckImageLibrary;
+  onDeckImageBind?: (deckName: string, presetId: string | null) => Promise<void>;
+  onDeckImageCreate?: (deckName: string, label: string, layers: DeckImageLayer[]) => Promise<void>;
 }
 
 const BADGE_COLORS: Record<number, { background: string; color: string; border: string }> = {
@@ -20,7 +22,7 @@ const BADGE_COLORS: Record<number, { background: string; color: string; border: 
   3: { background: '#dcfce7', color: '#166534', border: '#86efac' },
 };
 
-export default function SessionTabs({ season, isAdmin, onSessionSave, onDateChange, deckImages, onDeckImageSave }: Props) {
+export default function SessionTabs({ season, isAdmin, onSessionSave, onDateChange, deckImages, deckImageLibrary, onDeckImageBind, onDeckImageCreate }: Props) {
   const [activeTab, setActiveTab] = useState(0);
 
   const formatDate = (dateStr: string) => {
@@ -121,7 +123,9 @@ export default function SessionTabs({ season, isAdmin, onSessionSave, onDateChan
             isAdmin={isAdmin}
             onSave={onSessionSave ? matches => onSessionSave(session.id, matches) : undefined}
             deckImages={deckImages}
-            onDeckImageSave={onDeckImageSave}
+            deckImageLibrary={deckImageLibrary}
+            onDeckImageBind={onDeckImageBind}
+            onDeckImageCreate={onDeckImageCreate}
           />
         </div>
       ))}

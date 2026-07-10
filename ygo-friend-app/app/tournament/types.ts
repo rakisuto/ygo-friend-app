@@ -45,7 +45,17 @@ export interface DeckImageLayer {
   scale: number; // 100-300 (%)
 }
 
-/** デッキテーマ名 → 表示画像の紐づけ。複数テーマの掛け合わせは枚数分割で並べて表示する。 */
+/** 複数テーマの掛け合わせは枚数分割で並べて表示する、合成済み画像1件分。 */
 export type DeckImageMapping = DeckImageLayer[];
 
-export type DeckImageMap = Record<string, DeckImageMapping>;
+/** 保存済みの合成画像プリセット。ラベルを付けて使い回す。 */
+export interface DeckImagePreset {
+  id: string;
+  label: string;
+  layers: DeckImageLayer[];
+}
+
+export type DeckImageLibrary = DeckImagePreset[];
+
+/** デッキテーマ名 → 使用するプリセットID の紐づけ。 */
+export type DeckImageMap = Record<string, string>;

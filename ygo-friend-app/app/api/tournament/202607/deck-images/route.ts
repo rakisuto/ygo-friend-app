@@ -23,10 +23,10 @@ export async function PATCH(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
   try {
-    const { deckName, mapping } = await req.json() as { deckName: string; mapping: DeckImageMap[string] | null };
+    const { deckName, presetId } = await req.json() as { deckName: string; presetId: string | null };
     const current = (await kv.get<DeckImageMap>(KEY)) ?? {};
-    if (mapping && mapping.length > 0) {
-      current[deckName] = mapping;
+    if (presetId) {
+      current[deckName] = presetId;
     } else {
       delete current[deckName];
     }

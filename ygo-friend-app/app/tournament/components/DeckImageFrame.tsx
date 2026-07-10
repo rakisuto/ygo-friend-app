@@ -5,12 +5,12 @@ import type { DeckImageMapping } from '../types';
 interface Props {
   deckName: string | null;
   mapping?: DeckImageMapping;
-  width?: number;
+  width?: number | string;
   height?: number;
   fallbackDark?: boolean;
 }
 
-export default function DeckImageFrame({ deckName, mapping, width = 96, height = 60, fallbackDark }: Props) {
+export default function DeckImageFrame({ deckName, mapping, width = '100%', height = 72, fallbackDark }: Props) {
   if (!deckName) {
     return (
       <span style={{ color: fallbackDark ? 'rgba(148,163,184,0.4)' : '#cbd5e1' }}>—</span>
@@ -26,8 +26,6 @@ export default function DeckImageFrame({ deckName, mapping, width = 96, height =
     );
   }
 
-  const stripWidth = width / layers.length;
-
   return (
     <div
       style={{
@@ -40,7 +38,7 @@ export default function DeckImageFrame({ deckName, mapping, width = 96, height =
         <div
           key={i}
           style={{
-            position: 'relative', width: stripWidth, height, overflow: 'hidden',
+            position: 'relative', flex: 1, height: '100%', overflow: 'hidden',
             borderRight: i < layers.length - 1 ? '1px solid rgba(255,255,255,0.25)' : 'none',
           }}
         >
@@ -49,8 +47,10 @@ export default function DeckImageFrame({ deckName, mapping, width = 96, height =
             alt={deckName}
             style={{
               position: 'absolute',
-              width: `${layer.scale}%`,
+              height: `${layer.scale}%`,
+              width: 'auto',
               maxWidth: 'none',
+              maxHeight: 'none',
               left: `${layer.offsetX}%`,
               top: `${layer.offsetY}%`,
               transform: 'translate(-50%, -50%)',
@@ -62,10 +62,9 @@ export default function DeckImageFrame({ deckName, mapping, width = 96, height =
         style={{
           position: 'absolute', left: 0, right: 0, bottom: 0,
           background: 'rgba(0,0,0,0.7)', color: '#fff',
-          fontSize: '0.75rem', fontWeight: 700, textAlign: 'center',
-          padding: '3px 4px', lineHeight: 1.25,
-          display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' as const,
-          overflow: 'hidden', wordBreak: 'break-all',
+          fontSize: '0.8125rem', fontWeight: 700, textAlign: 'center',
+          padding: '3px 6px', lineHeight: 1.3,
+          whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
         }}
       >
         {deckName}

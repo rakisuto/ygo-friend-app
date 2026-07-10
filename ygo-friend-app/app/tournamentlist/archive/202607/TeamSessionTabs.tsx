@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import type { Season, Match, TeamKey, DeckImageMap } from '@/app/tournament/types';
+import type { Season, Match, TeamKey, DeckImageMap, DeckImageLibrary } from '@/app/tournament/types';
 import DeckImageFrame from '@/app/tournament/components/DeckImageFrame';
 
 function calcPoints(m: Match): number {
@@ -55,12 +55,19 @@ const tdStyle: React.CSSProperties = {
   whiteSpace: 'nowrap',
 };
 
-interface Props { season: Season; deckImages?: DeckImageMap }
+interface Props { season: Season; deckImages?: DeckImageMap; deckImageLibrary?: DeckImageLibrary }
 
-export default function TeamSessionTabs({ season, deckImages }: Props) {
+export default function TeamSessionTabs({ season, deckImages, deckImageLibrary }: Props) {
   const [activeTab, setActiveTab] = useState(0);
   const teamPoints = calcTeamPoints(season);
   const playerMap = Object.fromEntries(season.players.map(p => [p.id, p.teamPlayerName || p.name]));
+
+  const resolveLayers = (deckName: string | null) => {
+    if (!deckName) return undefined;
+    const presetId = deckImages?.[deckName.trim()];
+    if (!presetId) return undefined;
+    return deckImageLibrary?.find(p => p.id === presetId)?.layers;
+  };
 
   const formatDate = (dateStr: string) => {
     if (!dateStr) return '未定';
@@ -163,9 +170,9 @@ export default function TeamSessionTabs({ season, deckImages }: Props) {
                     <tr style={{ background: 'rgba(255,255,255,0.04)' }}>
                       <th style={thStyle}>ラウンド</th>
                       <th style={thStyle}>先攻</th>
-                      <th style={thStyle}>先攻デッキ</th>
+                      <th style={{ ...thStyle, minWidth: '220px', width: '28%' }}>先攻デッキ</th>
                       <th style={thStyle}>後攻</th>
-                      <th style={thStyle}>後攻デッキ</th>
+                      <th style={{ ...thStyle, minWidth: '220px', width: '28%' }}>後攻デッキ</th>
                       <th style={thStyle}>勝者</th>
                       <th style={{ ...thStyle, textAlign: 'center' }}>勝ち点</th>
                     </tr>
@@ -188,20 +195,20 @@ export default function TeamSessionTabs({ season, deckImages }: Props) {
                         >
                           <td style={{ ...tdStyle, fontWeight: 700, color: '#94a3b8' }}>第{match.matchNumber}R</td>
                           <td style={tdStyle}>{playerMap[match.firstPlayerId] || <span style={{ color: 'rgba(148,163,184,0.4)' }}>—</span>}</td>
-                          <td style={{ ...tdStyle, whiteSpace: 'normal', padding: '8px 12px' }}>
+                          <td style={{ ...tdStyle, whiteSpace: 'normal', padding: '8px 10px' }}>
                             <DeckImageFrame
                               deckName={match.firstPlayerDeck}
-                              mapping={match.firstPlayerDeck ? deckImages?.[match.firstPlayerDeck.trim()] : undefined}
-                              width={92} height={58}
+                              mapping={resolveLayers(match.firstPlayerDeck)}
+                              width="100%" height={74}
                               fallbackDark
                             />
                           </td>
                           <td style={tdStyle}>{playerMap[match.secondPlayerId] || <span style={{ color: 'rgba(148,163,184,0.4)' }}>—</span>}</td>
-                          <td style={{ ...tdStyle, whiteSpace: 'normal', padding: '8px 12px' }}>
+                          <td style={{ ...tdStyle, whiteSpace: 'normal', padding: '8px 10px' }}>
                             <DeckImageFrame
                               deckName={match.secondPlayerDeck}
-                              mapping={match.secondPlayerDeck ? deckImages?.[match.secondPlayerDeck.trim()] : undefined}
-                              width={92} height={58}
+                              mapping={resolveLayers(match.secondPlayerDeck)}
+                              width="100%" height={74}
                               fallbackDark
                             />
                           </td>
