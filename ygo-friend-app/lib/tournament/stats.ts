@@ -101,12 +101,15 @@ function emptyRaw(): RawRecord {
   return { wins: 0, losses: 0, firstWins: 0, firstLosses: 0, secondWins: 0, secondLosses: 0 };
 }
 
-function addResult(r: RawRecord, won: boolean, isFirst: boolean) {
+/** isFirst が null の場合(先攻未定の試合)は先攻/後攻の内訳には数えない */
+function addResult(r: RawRecord, won: boolean, isFirst: boolean | null) {
   if (won) {
     r.wins++;
+    if (isFirst === null) return;
     if (isFirst) r.firstWins++; else r.secondWins++;
   } else {
     r.losses++;
+    if (isFirst === null) return;
     if (isFirst) r.firstLosses++; else r.secondLosses++;
   }
 }
@@ -131,6 +134,8 @@ export function computePlayerStats(season: Season, playerId: string): PlayerStat
     if (!involved || !match.winnerId) continue;
 
     const isFirst = match.firstPlayerId === playerId;
+    // 先攻未定のまま勝敗が入った試合は、先攻/後攻の内訳には含めない
+    const side: boolean | null = match.firstUndecided ? null : isFirst;
     const won = match.winnerId === playerId;
     const myDeck = isFirst ? match.firstPlayerDeck : match.secondPlayerDeck;
     const opponentId = isFirst ? match.secondPlayerId : match.firstPlayerId;
@@ -143,11 +148,13 @@ export function computePlayerStats(season: Season, playerId: string): PlayerStat
     // own deck
     if (myDeck) {
       if (!deckStats[myDeck]) deckStats[myDeck] = emptyRaw();
-      addResult(deckStats[myDeck], won, isFirst);
+      addResult(deckStats[myDeck], won, side);
     }
 
     // 先後
-    if (isFirst) {
+    if (side === null) {
+      // 先攻未定: 集計しない
+    } else if (isFirst) {
       firstStats.total++;
       if (won) firstStats.wins++; else firstStats.losses++;
     } else {
@@ -157,7 +164,7 @@ export function computePlayerStats(season: Season, playerId: string): PlayerStat
 
     // vs player
     if (!vsRaw[opponentId]) vsRaw[opponentId] = emptyRaw();
-    addResult(vsRaw[opponentId], won, isFirst);
+    addResult(vsRaw[opponentId], won, side);
 
     // vs theme（有利/不利テーマ用）
     if (opponentDeck) {
@@ -169,7 +176,7 @@ export function computePlayerStats(season: Season, playerId: string): PlayerStat
     if (myDeck && opponentDeck) {
       if (!deckMatchupRaw[myDeck]) deckMatchupRaw[myDeck] = {};
       if (!deckMatchupRaw[myDeck][opponentDeck]) deckMatchupRaw[myDeck][opponentDeck] = emptyRaw();
-      addResult(deckMatchupRaw[myDeck][opponentDeck], won, isFirst);
+      addResult(deckMatchupRaw[myDeck][opponentDeck], won, side);
     }
   }
 

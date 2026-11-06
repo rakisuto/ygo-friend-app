@@ -74,6 +74,12 @@ export default function RoundRobinSessionTabs({ season, deckImages, deckImageLib
 
   const playerMap = Object.fromEntries(season.players.map(p => [p.id, p.name]));
   const playerIconMap = Object.fromEntries(season.players.map(p => [p.id, p.iconPath]));
+  // 先攻未定の試合の表示用「A vs B」(プレイヤー登録順で固定)
+  const versus = (idA: string, idB: string) =>
+    [idA, idB]
+      .sort((a, b) => season.players.findIndex(p => p.id === a) - season.players.findIndex(p => p.id === b))
+      .map(id => playerMap[id])
+      .join(' vs ');
   const accentOf = (playerId: string) => {
     const idx = season.players.findIndex(p => p.id === playerId);
     return PLAYER_ACCENTS[idx % PLAYER_ACCENTS.length];
@@ -256,6 +262,18 @@ export default function RoundRobinSessionTabs({ season, deckImages, deckImageLib
                           }}
                         >
                           <td style={{ ...tdStyle, fontWeight: 700, color: '#94a3b8' }}>R{match.matchNumber}</td>
+                          {match.firstUndecided ? (
+                            // 先攻/後攻は当日のコイントスで決まるまで、対戦カードだけを表示する
+                            <td colSpan={4} style={{ ...tdStyle, padding: '10px 6px' }}>
+                              <div style={{ fontSize: '0.8125rem', fontWeight: 600, color: 'rgba(226,232,240,0.95)', overflowWrap: 'anywhere' }}>
+                                {versus(match.firstPlayerId, match.secondPlayerId)}
+                              </div>
+                              <div style={{ fontSize: '0.625rem', color: 'rgba(148,163,184,0.7)', marginTop: '2px' }}>
+                                先攻未定（コイントスで決定）
+                              </div>
+                            </td>
+                          ) : (
+                          <>
                           <td style={tdStyle}>
                             <PlayerCell
                               name={playerMap[match.firstPlayerId]}
@@ -286,6 +304,8 @@ export default function RoundRobinSessionTabs({ season, deckImages, deckImageLib
                               fallbackDark
                             />
                           </td>
+                          </>
+                          )}
                           <td style={tdStyle}>
                             {match.winnerId ? (
                               <span

@@ -18,6 +18,8 @@ export interface Match {
   secondPlayerId: string;
   secondPlayerDeck: string | null;
   winnerId: string | null;
+  /** true の間は先攻/後攻が未決定(当日のコイントスで管理画面から決める)。未指定は決定済み扱い。 */
+  firstUndecided?: boolean;
 }
 
 export interface Session {

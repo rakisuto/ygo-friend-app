@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { generateSeason } from '@/lib/tournament/generator';
+import { generateCoinTossSeason } from '@/lib/tournament/generator';
 import type { Match, Season } from '../../types';
 import SessionTabs from '../../components/SessionTabs';
 
@@ -187,7 +187,8 @@ export default function AdminPage() {
 
     setGenerating(true);
     try {
-      const newSeason = generateSeason(playerNames.map(n => n.trim()), dates, seasonName.trim());
+      // 先攻/後攻は当日のコイントスで決めるため、全試合「先攻未定」で生成する
+      const newSeason = generateCoinTossSeason(playerNames.map(n => n.trim()), dates, seasonName.trim());
       const res = await adminFetch('/api/tournament/202611', { method: 'POST', body: JSON.stringify(newSeason) });
       if (res.status === 401) { handleUnauthorized(); return; }
       if (!res.ok) {
@@ -557,6 +558,7 @@ export default function AdminPage() {
         <SessionTabs
           season={season}
           isAdmin
+          firstSelectable
           onSessionSave={handleSessionSave}
           onDateChange={handleDateChange}
         />

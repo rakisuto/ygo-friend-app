@@ -7,6 +7,8 @@ import MatchTable from './MatchTable';
 interface Props {
   season: Season;
   isAdmin?: boolean;
+  /** 管理画面で先攻を試合ごとに選べるようにする(当日のコイントスで決める大会用) */
+  firstSelectable?: boolean;
   onSessionSave?: (sessionId: string, matches: Match[]) => Promise<void>;
   onDateChange?: (sessionId: string, date: string) => Promise<void>;
   deckImages?: DeckImageMap;
@@ -22,7 +24,7 @@ const BADGE_COLORS: Record<number, { background: string; color: string; border: 
   3: { background: '#dcfce7', color: '#166534', border: '#86efac' },
 };
 
-export default function SessionTabs({ season, isAdmin, onSessionSave, onDateChange, deckImages, deckImageLibrary, onDeckImageBind, onDeckImageCreate }: Props) {
+export default function SessionTabs({ season, isAdmin, firstSelectable, onSessionSave, onDateChange, deckImages, deckImageLibrary, onDeckImageBind, onDeckImageCreate }: Props) {
   const [activeTab, setActiveTab] = useState(0);
 
   const formatDate = (dateStr: string) => {
@@ -121,6 +123,7 @@ export default function SessionTabs({ season, isAdmin, onSessionSave, onDateChan
             session={session}
             players={season.players}
             isAdmin={isAdmin}
+            firstSelectable={firstSelectable}
             onSave={onSessionSave ? matches => onSessionSave(session.id, matches) : undefined}
             deckImages={deckImages}
             deckImageLibrary={deckImageLibrary}

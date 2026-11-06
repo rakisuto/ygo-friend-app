@@ -9,6 +9,8 @@ interface Props {
   session: Session;
   players: Player[];
   isAdmin?: boolean;
+  /** 管理画面で先攻をコイントスの結果に応じて試合ごとに選べるようにする(先攻未定にも戻せる)。 */
+  firstSelectable?: boolean;
   onSave?: (matches: Match[]) => Promise<void>;
   deckImages?: DeckImageMap;
   deckImageLibrary?: DeckImageLibrary;
@@ -25,7 +27,7 @@ const COL = {
   numHeader:    { background: '#374151', color: '#ffffff', padding: '8px 10px', textAlign: 'center' as const, width: '40px' },
 };
 
-export default function MatchTable({ session, players, isAdmin, onSave, deckImages, deckImageLibrary, onDeckImageBind, onDeckImageCreate }: Props) {
+export default function MatchTable({ session, players, isAdmin, firstSelectable, onSave, deckImages, deckImageLibrary, onDeckImageBind, onDeckImageCreate }: Props) {
   const [edited, setEdited] = useState<Match[]>(session.matches);
   const [saving, setSaving] = useState(false);
   const [toastState, setToastState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
@@ -67,6 +69,28 @@ export default function MatchTable({ session, players, isAdmin, onSave, deckImag
     );
     if (toastState === 'saved') setToastState('idle');
   };
+
+  // 先攻の選択。空文字=先攻未定。選んだ側が先攻になり、デッキは選手に付いたまま入れ替わる。
+  const setFirst = (index: number, value: string) => {
+    setEdited(prev =>
+      prev.map((m, i) => {
+        if (i !== index) return m;
+        if (value === '') return { ...m, firstUndecided: true };
+        const base = value === m.firstPlayerId ? m : {
+          ...m,
+          firstPlayerId: m.secondPlayerId,
+          secondPlayerId: m.firstPlayerId,
+          firstPlayerDeck: m.secondPlayerDeck,
+          secondPlayerDeck: m.firstPlayerDeck,
+        };
+        return { ...base, firstUndecided: false };
+      })
+    );
+    if (toastState === 'saved') setToastState('idle');
+  };
+  const decksLocked = (m: Match) => !!firstSelectable && !!m.firstUndecided;
+  // 先攻の選択肢は、先攻/後攻が入れ替わっても並び順が変わらないようプレイヤー順で固定する
+  const playerOrder = (id: string) => players.findIndex(p => p.id === id);
 
   const shuffleOrder = () => {
     setEdited(prev => {
@@ -122,7 +146,7 @@ export default function MatchTable({ session, players, isAdmin, onSave, deckImag
               <th style={COL.secondHeader}>後攻</th>
               <th style={{ ...COL.secondDeckH, minWidth: '130px' }}>後攻デッキ</th>
               <th style={{ ...COL.winnerHeader, minWidth: '120px' }}>勝者</th>
-              {isAdmin && <th style={{ ...COL.numHeader, width: '48px' }}>入替</th>}
+              {isAdmin && !firstSelectable && <th style={{ ...COL.numHeader, width: '48px' }}>入替</th>}
             </tr>
           </thead>
           <tbody>
@@ -143,12 +167,31 @@ export default function MatchTable({ session, players, isAdmin, onSave, deckImag
                     borderRight: '1px solid #dbeafe',
                     whiteSpace: 'nowrap',
                   }}>
+                    {isAdmin && firstSelectable ? (
+                      <select
+                        value={match.firstUndecided ? '' : match.firstPlayerId}
+                        onChange={e => setFirst(i, e.target.value)}
+                        style={{
+                          width: '100%', minWidth: '110px', border: '1px solid #93c5fd', borderRadius: '4px',
+                          padding: '4px', fontSize: '0.875rem', fontWeight: 600, background: '#fff',
+                          color: match.firstUndecided ? '#94a3b8' : '#1d4ed8',
+                        }}
+                      >
+                        <option value="">先攻を選択</option>
+                        {[match.firstPlayerId, match.secondPlayerId]
+                          .sort((a, b) => playerOrder(a) - playerOrder(b))
+                          .map(id => (
+                            <option key={id} value={id}>{playerMap[id]}</option>
+                          ))}
+                      </select>
+                    ) : (
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', justifyContent: 'center' }}>
                       {playerIconMap[match.firstPlayerId] && (
                         <img src={playerIconMap[match.firstPlayerId]} alt="" style={{ width: '20px', height: '20px', borderRadius: '4px', objectFit: 'cover', flexShrink: 0 }} />
                       )}
                       {firstWon && '🏆 '}{playerMap[match.firstPlayerId]}
                     </span>
+                    )}
                   </td>
 
                   {/* 先攻デッキ */}
@@ -166,6 +209,7 @@ export default function MatchTable({ session, players, isAdmin, onSave, deckImag
                           style={{ flex: 1, minWidth: 0, border: '1px solid #e2e8f0', borderRadius: '4px', padding: '4px 6px', fontSize: '0.875rem', background: '#fff', color: '#1e293b' }}
                           value={match.firstPlayerDeck ?? ''}
                           onChange={e => update(i, 'firstPlayerDeck', e.target.value)}
+                          disabled={decksLocked(match)}
                           placeholder="デッキテーマ"
                           autoComplete="off"
                         />
@@ -198,12 +242,16 @@ export default function MatchTable({ session, players, isAdmin, onSave, deckImag
                     borderRight: '1px solid #fee2e2',
                     whiteSpace: 'nowrap',
                   }}>
+                    {isAdmin && decksLocked(match) ? (
+                      <span style={{ color: '#94a3b8', fontWeight: 400, fontSize: '0.8125rem' }}>先攻を選ぶと決まります</span>
+                    ) : (
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', justifyContent: 'center' }}>
                       {playerIconMap[match.secondPlayerId] && (
                         <img src={playerIconMap[match.secondPlayerId]} alt="" style={{ width: '20px', height: '20px', borderRadius: '4px', objectFit: 'cover', flexShrink: 0 }} />
                       )}
                       {secondWon && '🏆 '}{playerMap[match.secondPlayerId]}
                     </span>
+                    )}
                   </td>
 
                   {/* 後攻デッキ */}
@@ -221,6 +269,7 @@ export default function MatchTable({ session, players, isAdmin, onSave, deckImag
                           style={{ flex: 1, minWidth: 0, border: '1px solid #e2e8f0', borderRadius: '4px', padding: '4px 6px', fontSize: '0.875rem', background: '#fff', color: '#1e293b' }}
                           value={match.secondPlayerDeck ?? ''}
                           onChange={e => update(i, 'secondPlayerDeck', e.target.value)}
+                          disabled={decksLocked(match)}
                           placeholder="デッキテーマ"
                           autoComplete="off"
                         />
@@ -270,7 +319,7 @@ export default function MatchTable({ session, players, isAdmin, onSave, deckImag
                   </td>
 
                   {/* 先攻/後攻 入替 */}
-                  {isAdmin && (
+                  {isAdmin && !firstSelectable && (
                     <td style={{ padding: '6px 8px', textAlign: 'center' }}>
                       <button
                         type="button"
