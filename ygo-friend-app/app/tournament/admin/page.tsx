@@ -6,6 +6,7 @@ import { useState } from 'react';
 const TOURNAMENTS = [
   { id: '202605', label: '2026年5月大会' },
   { id: '202607', label: '2026年7月大会' },
+  { id: '202611', label: '2026年11月大会' },
 ];
 
 export default function AdminIndexPage() {
