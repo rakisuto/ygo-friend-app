@@ -23,10 +23,12 @@ export default async function Archive202607Page({ searchParams }: PageProps) {
   let season: Season | null = null;
   let deckImages: DeckImageMap = {};
   let deckImageLibrary: DeckImageLibrary = [];
+  let connectionError = false;
   try {
     season = await kv.get<Season>('tournament:season:202607');
   } catch {
-    // KV接続エラー時はnullとして扱う
+    // 「データが無い」と区別するため、接続エラーとして表示する
+    connectionError = true;
   }
   try {
     deckImages = (await kv.get<DeckImageMap>('tournament:202607:deckImages')) ?? {};
@@ -54,7 +56,9 @@ export default async function Archive202607Page({ searchParams }: PageProps) {
         <ArchiveTabs season={season} activeTab={activeTab} deckImages={deckImages} deckImageLibrary={deckImageLibrary} />
       ) : (
         <p style={{ color: 'rgba(255,255,255,0.85)', textShadow: '0 1px 4px rgba(0,0,0,0.6)' }}>
-          スケジュールはまだ生成されていません。
+          {connectionError
+            ? 'データベースに接続できません。しばらくしてからもう一度お試しください。'
+            : 'スケジュールはまだ生成されていません。'}
         </p>
       )}
     </main>

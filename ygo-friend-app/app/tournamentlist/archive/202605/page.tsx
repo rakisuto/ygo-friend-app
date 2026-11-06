@@ -21,17 +21,23 @@ export default async function Archive202605Page({ searchParams }: PageProps) {
   const activeTab = parseTab(rawTab);
 
   let season: Season | null = null;
+  let connectionError = false;
   try {
     season = await kv.get<Season>('tournament:season');
   } catch {
-    // KV接続エラー時はnullとして扱う
+    // 「データが無い」と区別するため、接続エラーとして表示する
+    connectionError = true;
   }
 
   if (!season) {
     return (
       <main className="page-main">
         <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', marginBottom: '1rem' }}>2026年5月大会</h1>
-        <p style={{ color: '#94a3b8' }}>スケジュールはまだ生成されていません。</p>
+        <p style={{ color: '#94a3b8' }}>
+          {connectionError
+            ? 'データベースに接続できません。しばらくしてからもう一度お試しください。'
+            : 'スケジュールはまだ生成されていません。'}
+        </p>
       </main>
     );
   }
