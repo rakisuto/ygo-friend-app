@@ -1,6 +1,11 @@
-// Vercel連携(Upstash)が設定する KV_REST_API_* を優先し、無ければ従来の UPSTASH_REDIS_REST_* を使う
-const url = (process.env.KV_REST_API_URL ?? process.env.UPSTASH_REDIS_REST_URL)!;
-const token = (process.env.KV_REST_API_TOKEN ?? process.env.UPSTASH_REDIS_REST_TOKEN)!;
+// Vercel連携(Upstash)の接頭辞付き変数(DB_KV_REST_API_*)を優先し、
+// 無ければ KV_REST_API_*、従来の UPSTASH_REDIS_REST_* の順にフォールバックする
+const url = (
+  process.env.DB_KV_REST_API_URL ?? process.env.KV_REST_API_URL ?? process.env.UPSTASH_REDIS_REST_URL
+)!;
+const token = (
+  process.env.DB_KV_REST_API_TOKEN ?? process.env.KV_REST_API_TOKEN ?? process.env.UPSTASH_REDIS_REST_TOKEN
+)!;
 
 async function exec(cmd: (string | number | null)[]): Promise<unknown> {
   const res = await fetch(url, {
