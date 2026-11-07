@@ -128,6 +128,14 @@ export default function DeckImageLibraryPage() {
   const [pinInput, setPinInput] = useState('');
   const [pinError, setPinError] = useState('');
 
+  // このライブラリは大会間で共有。2026年11月大会の管理画面から来た場合(?from=202611)はそちらへ戻る
+  const [backHref, setBackHref] = useState('/tournament/admin/202607');
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('from') === '202611') {
+      setBackHref('/tournament/admin/202611');
+    }
+  }, []);
+
   const [library, setLibrary] = useState<DeckImageLibrary | undefined>(undefined);
   const [editingPreset, setEditingPreset] = useState<DeckImagePreset | null | undefined>(undefined); // undefined = 非表示, null = 新規作成
 
@@ -223,7 +231,7 @@ export default function DeckImageLibraryPage() {
     <main style={{ maxWidth: '960px', margin: '0 auto', padding: '2rem 1.5rem' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '10px' }}>
         <div>
-          <Link href="/tournament/admin/202607" style={{ fontSize: '0.8125rem', color: '#64748b', textDecoration: 'none' }}>← 大会設定に戻る</Link>
+          <Link href={backHref} style={{ fontSize: '0.8125rem', color: '#64748b', textDecoration: 'none' }}>← 大会設定に戻る</Link>
           <h1 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#1e293b', marginTop: '4px' }}>🖼️ デッキ画像ライブラリ管理</h1>
         </div>
         <HoverButton onClick={() => setEditingPreset(null)} variant="secondary">

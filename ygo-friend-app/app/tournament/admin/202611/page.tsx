@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import Link from 'next/link';
 import { generateCoinTossSeason } from '@/lib/tournament/generator';
-import type { Match, Season } from '../../types';
+import type { Match, Season, DeckImageMap, DeckImageLibrary, DeckImageLayer } from '../../types';
 import SessionTabs from '../../components/SessionTabs';
 
 type Mode = 'view' | 'generate';
@@ -138,6 +139,10 @@ export default function AdminPage() {
   const [deleting, setDeleting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
+  // デッキ画像(紐づけ・ライブラリ)は2026年7月大会と共有する。公開ページも同じデータを読む。
+  const [deckImages, setDeckImages] = useState<DeckImageMap>({});
+  const [deckImageLibrary, setDeckImageLibrary] = useState<DeckImageLibrary>([]);
+
   const [description, setDescription] = useState('');
   const [descToast, setDescToast] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
 
@@ -155,6 +160,20 @@ export default function AdminPage() {
       .then(r => r.json())
       .then(data => setSeason(data ?? null))
       .catch(() => setSeason(null));
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/tournament/202607/deck-images')
+      .then(r => r.json())
+      .then(data => setDeckImages(data ?? {}))
+      .catch(() => setDeckImages({}));
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/tournament/202607/deck-image-library')
+      .then(r => r.json())
+      .then(data => setDeckImageLibrary(Array.isArray(data) ? data : []))
+      .catch(() => setDeckImageLibrary([]));
   }, []);
 
   const handlePinSubmit = () => {
@@ -178,6 +197,32 @@ export default function AdminPage() {
         ...((options.headers as Record<string, string>) ?? {}),
       },
     });
+
+  const handleDeckImageBind = async (deckName: string, presetId: string | null) => {
+    const res = await adminFetch('/api/tournament/202607/deck-images', {
+      method: 'PATCH',
+      body: JSON.stringify({ deckName, presetId }),
+    });
+    if (res.status === 401) { handleUnauthorized(); return; }
+    if (!res.ok) return;
+    setDeckImages(prev => {
+      const next = { ...prev };
+      if (presetId) next[deckName] = presetId; else delete next[deckName];
+      return next;
+    });
+  };
+
+  const handleDeckImageCreate = async (deckName: string, label: string, layers: DeckImageLayer[]) => {
+    const res = await adminFetch('/api/tournament/202607/deck-image-library', {
+      method: 'POST',
+      body: JSON.stringify({ label, layers }),
+    });
+    if (res.status === 401) { handleUnauthorized(); return; }
+    if (!res.ok) return;
+    const preset = await res.json();
+    setDeckImageLibrary(prev => [...prev, preset]);
+    await handleDeckImageBind(deckName, preset.id);
+  };
 
   const handleGenerate = async () => {
     setGenError('');
@@ -482,6 +527,11 @@ export default function AdminPage() {
               </p>
             </div>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexShrink: 0 }}>
+              <Link href="/tournament/admin/202607/deck-images?from=202611" style={{ textDecoration: 'none' }}>
+                <HoverButton variant="ghost">
+                  🖼️ 画像ライブラリ
+                </HoverButton>
+              </Link>
               <HoverButton onClick={handleInfoEdit} variant="ghost">
                 ✏️ 編集
               </HoverButton>
@@ -561,6 +611,10 @@ export default function AdminPage() {
           firstSelectable
           onSessionSave={handleSessionSave}
           onDateChange={handleDateChange}
+          deckImages={deckImages}
+          deckImageLibrary={deckImageLibrary}
+          onDeckImageBind={handleDeckImageBind}
+          onDeckImageCreate={handleDeckImageCreate}
         />
       </Card>
 
