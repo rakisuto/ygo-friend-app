@@ -10,6 +10,8 @@ interface Props {
   /** 管理画面で先攻を試合ごとに選べるようにする(当日のコイントスで決める大会用) */
   firstSelectable?: boolean;
   onSessionSave?: (sessionId: string, matches: Match[]) => Promise<void>;
+  /** 結果を保存して Discord にアナウンスする(失敗時は throw)。MatchTable の onAnnounce 参照 */
+  onAnnounce?: (sessionId: string, matches: Match[], matchNumber: number, kind: 'start' | 'result') => Promise<void>;
   onDateChange?: (sessionId: string, date: string) => Promise<void>;
   deckImages?: DeckImageMap;
   deckImageLibrary?: DeckImageLibrary;
@@ -24,7 +26,7 @@ const BADGE_COLORS: Record<number, { background: string; color: string; border: 
   3: { background: '#dcfce7', color: '#166534', border: '#86efac' },
 };
 
-export default function SessionTabs({ season, isAdmin, firstSelectable, onSessionSave, onDateChange, deckImages, deckImageLibrary, onDeckImageBind, onDeckImageCreate }: Props) {
+export default function SessionTabs({ season, isAdmin, firstSelectable, onSessionSave, onAnnounce, onDateChange, deckImages, deckImageLibrary, onDeckImageBind, onDeckImageCreate }: Props) {
   const [activeTab, setActiveTab] = useState(0);
 
   const formatDate = (dateStr: string) => {
@@ -125,6 +127,7 @@ export default function SessionTabs({ season, isAdmin, firstSelectable, onSessio
             isAdmin={isAdmin}
             firstSelectable={firstSelectable}
             onSave={onSessionSave ? matches => onSessionSave(session.id, matches) : undefined}
+            onAnnounce={onAnnounce ? (matches, matchNumber, kind) => onAnnounce(session.id, matches, matchNumber, kind) : undefined}
             deckImages={deckImages}
             deckImageLibrary={deckImageLibrary}
             onDeckImageBind={onDeckImageBind}

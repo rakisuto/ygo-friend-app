@@ -198,6 +198,24 @@ export default function AdminPage() {
       },
     });
 
+  // 結果を保存してから Discord に投稿する。保存に失敗したときは投稿しない(古いデータでアナウンスしないため)。
+  const handleAnnounce = async (sessionId: string, matches: Match[], matchNumber: number, kind: 'start' | 'result') => {
+    const saveRes = await adminFetch(`/api/tournament/202611/session/${sessionId}`, { method: 'PATCH', body: JSON.stringify({ matches }) });
+    if (saveRes.status === 401) { handleUnauthorized(); throw new Error('PINが正しくありません'); }
+    if (!saveRes.ok) throw new Error('保存に失敗したため、投稿していません');
+    setSeason(prev => prev ? { ...prev, sessions: prev.sessions.map(s => s.id === sessionId ? { ...s, matches } : s) } : prev);
+
+    const res = await adminFetch('/api/tournament/202611/announce', {
+      method: 'POST',
+      body: JSON.stringify({ sessionId, matchNumber, kind }),
+    });
+    if (res.status === 401) { handleUnauthorized(); throw new Error('PINが正しくありません'); }
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(`結果は保存済み。投稿に失敗: ${body.error ?? res.status}`);
+    }
+  };
+
   const handleDeckImageBind = async (deckName: string, presetId: string | null) => {
     const res = await adminFetch('/api/tournament/202607/deck-images', {
       method: 'PATCH',
@@ -610,6 +628,7 @@ export default function AdminPage() {
           isAdmin
           firstSelectable
           onSessionSave={handleSessionSave}
+          onAnnounce={handleAnnounce}
           onDateChange={handleDateChange}
           deckImages={deckImages}
           deckImageLibrary={deckImageLibrary}

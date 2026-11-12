@@ -12,6 +12,11 @@ interface Props {
   /** 管理画面で先攻をコイントスの結果に応じて試合ごとに選べるようにする(先攻未定にも戻せる)。 */
   firstSelectable?: boolean;
   onSave?: (matches: Match[]) => Promise<void>;
+  /**
+   * 「アナウンス」ボタン用。結果を保存してから Discord に投稿する(失敗時は throw)。
+   * kind: 'start' = N戦目の開始案内 / 'result' = N戦目の結果 + 次の試合の案内(最終試合は本日の結果と順位)
+   */
+  onAnnounce?: (matches: Match[], matchNumber: number, kind: 'start' | 'result') => Promise<void>;
   deckImages?: DeckImageMap;
   deckImageLibrary?: DeckImageLibrary;
   onDeckImageBind?: (deckName: string, presetId: string | null) => Promise<void>;
@@ -27,11 +32,13 @@ const COL = {
   numHeader:    { background: '#374151', color: '#ffffff', padding: '8px 10px', textAlign: 'center' as const, width: '40px' },
 };
 
-export default function MatchTable({ session, players, isAdmin, firstSelectable, onSave, deckImages, deckImageLibrary, onDeckImageBind, onDeckImageCreate }: Props) {
+export default function MatchTable({ session, players, isAdmin, firstSelectable, onSave, onAnnounce, deckImages, deckImageLibrary, onDeckImageBind, onDeckImageCreate }: Props) {
   const [edited, setEdited] = useState<Match[]>(session.matches);
   const [saving, setSaving] = useState(false);
   const [toastState, setToastState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [pickerDeckName, setPickerDeckName] = useState<string | null>(null);
+  // アナウンスの投稿状況(キー: `${kind}-${対戦番号}`)。ページを開き直すと消える。
+  const [announceStatus, setAnnounceStatus] = useState<Record<string, { state: 'sending' | 'done' | 'error'; message?: string }>>({});
 
   const resolveLayers = (deckName: string | null | undefined) => {
     if (!deckName) return undefined;
@@ -79,7 +86,31 @@ export default function MatchTable({ session, players, isAdmin, firstSelectable,
     if (toastState === 'saved') setToastState('idle');
   };
 
+  // 結果を保存してから Discord に投稿する。押し間違い・二重投稿を防ぐため、必ず確認を挟む。
+  const handleAnnounce = async (matchNumber: number, kind: 'start' | 'result') => {
+    if (!onAnnounce) return;
+    const key = `${kind}-${matchNumber}`;
+    const label = kind === 'start' ? `${matchNumber}戦目の開始案内` : `${matchNumber}戦目の結果`;
+    const already = announceStatus[key]?.state === 'done';
+    const ok = window.confirm(
+      already
+        ? `${label}は投稿済みです。もう一度 Discord に投稿しますか？`
+        : `結果を保存して、${label}を Discord に投稿しますか？`
+    );
+    if (!ok) return;
+    setAnnounceStatus(prev => ({ ...prev, [key]: { state: 'sending' } }));
+    try {
+      await onAnnounce(edited, matchNumber, kind);
+      setAnnounceStatus(prev => ({ ...prev, [key]: { state: 'done' } }));
+      setToastState('idle');
+    } catch (e) {
+      const message = e instanceof Error ? e.message : '投稿に失敗しました';
+      setAnnounceStatus(prev => ({ ...prev, [key]: { state: 'error', message } }));
+    }
+  };
+
   const shuffleOrder = () => {
+    setAnnounceStatus({}); // 対戦順が変わるので、投稿済みの記録は引き継がない
     setEdited(prev => {
       const arr = [...prev];
       for (let i = arr.length - 1; i > 0; i--) {
@@ -149,7 +180,30 @@ export default function MatchTable({ session, players, isAdmin, firstSelectable,
   return (
     <div>
       {isAdmin && (
-        <div style={{ marginBottom: '10px', display: 'flex', justifyContent: 'flex-end' }}>
+        <div style={{ marginBottom: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          {onAnnounce && edited.length > 0 ? (() => {
+            const firstNo = [...edited].sort((a, b) => a.matchNumber - b.matchNumber)[0].matchNumber;
+            const st = announceStatus[`start-${firstNo}`];
+            return (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  onClick={() => handleAnnounce(firstNo, 'start')}
+                  disabled={st?.state === 'sending'}
+                  style={{
+                    padding: '5px 14px', fontSize: '0.8125rem', fontWeight: 600,
+                    background: '#eef2ff', color: '#4338ca', border: '1px solid #c7d2fe',
+                    borderRadius: '999px', cursor: st?.state === 'sending' ? 'default' : 'pointer',
+                  }}
+                >
+                  📢 {firstNo}戦目の開始アナウンス
+                </button>
+                {st?.state === 'sending' && <span style={{ fontSize: '0.75rem', color: '#6366f1' }}>⏳ 投稿中...</span>}
+                {st?.state === 'done' && <span style={{ fontSize: '0.75rem', color: '#16a34a' }}>✅ 投稿済み</span>}
+                {st?.state === 'error' && <span style={{ fontSize: '0.75rem', color: '#dc2626' }}>❌ {st.message}</span>}
+              </span>
+            );
+          })() : <span />}
           <button
             type="button"
             onClick={shuffleOrder}
@@ -308,6 +362,7 @@ export default function MatchTable({ session, players, isAdmin, firstSelectable,
                   {/* 勝者 */}
                   <td style={{ padding: '6px 8px', textAlign: 'center' }}>
                     {isAdmin ? (
+                      <>
                       <select
                         style={{
                           width: '100%', border: '1px solid #e2e8f0', borderRadius: '4px',
@@ -321,6 +376,33 @@ export default function MatchTable({ session, players, isAdmin, firstSelectable,
                         <option value={match.firstPlayerId}>{playerMap[match.firstPlayerId]}</option>
                         <option value={match.secondPlayerId}>{playerMap[match.secondPlayerId]}</option>
                       </select>
+                      {onAnnounce && (() => {
+                        const st = announceStatus[`result-${match.matchNumber}`];
+                        const noWinner = !match.winnerId;
+                        const sending = st?.state === 'sending';
+                        return (
+                          <div style={{ marginTop: '5px' }}>
+                            <button
+                              type="button"
+                              onClick={() => handleAnnounce(match.matchNumber, 'result')}
+                              disabled={noWinner || sending}
+                              title={noWinner ? '勝者を選択するとアナウンスできます' : '結果を保存して Discord に投稿'}
+                              style={{
+                                width: '100%', padding: '4px 8px', fontSize: '0.8125rem', fontWeight: 600,
+                                background: noWinner ? '#f1f5f9' : '#eef2ff', color: noWinner ? '#94a3b8' : '#4338ca',
+                                border: `1px solid ${noWinner ? '#e2e8f0' : '#c7d2fe'}`, borderRadius: '6px',
+                                cursor: noWinner || sending ? 'default' : 'pointer', whiteSpace: 'nowrap',
+                              }}
+                            >
+                              📢 アナウンス
+                            </button>
+                            {sending && <div style={{ fontSize: '0.6875rem', color: '#6366f1', marginTop: '2px' }}>⏳ 投稿中...</div>}
+                            {st?.state === 'done' && <div style={{ fontSize: '0.6875rem', color: '#16a34a', marginTop: '2px' }}>✅ 投稿済み</div>}
+                            {st?.state === 'error' && <div style={{ fontSize: '0.6875rem', color: '#dc2626', marginTop: '2px', whiteSpace: 'normal' }}>❌ {st.message}</div>}
+                          </div>
+                        );
+                      })()}
+                      </>
                     ) : match.winnerId ? (
                       <span style={{ fontWeight: 700, color: '#d97706' }}>{playerMap[match.winnerId]}</span>
                     ) : (
