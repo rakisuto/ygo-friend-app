@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import type { Season, DeckImageMap, DeckImageLibrary } from '@/app/tournament/types';
 import DeckImageFrame from '@/app/tournament/components/DeckImageFrame';
-import { computeStandings } from '@/lib/tournament/stats';
+import { computePointStandings, matchPoints } from '@/lib/tournament/points';
 
 const glass: React.CSSProperties = {
   background: 'rgba(10, 15, 35, 0.65)',
@@ -66,9 +66,16 @@ function PlayerCell({ name, iconPath, won }: { name?: string; iconPath?: string;
   );
 }
 
-interface Props { season: Season; deckImages?: DeckImageMap; deckImageLibrary?: DeckImageLibrary }
+interface Props {
+  /** 試合表の表示用(未確定の試合は勝者が未定になっている) */
+  season: Season;
+  /** 勝ち点・勝敗の集計用(確定済みの試合のみ) */
+  statSeason: Season;
+  deckImages?: DeckImageMap;
+  deckImageLibrary?: DeckImageLibrary;
+}
 
-export default function RoundRobinSessionTabs({ season, deckImages, deckImageLibrary }: Props) {
+export default function RoundRobinSessionTabs({ season, statSeason, deckImages, deckImageLibrary }: Props) {
   const [activeTab, setActiveTab] = useState(0);
   const [zoom, setZoom] = useState(100);
 
@@ -84,7 +91,7 @@ export default function RoundRobinSessionTabs({ season, deckImages, deckImageLib
     const idx = season.players.findIndex(p => p.id === playerId);
     return PLAYER_ACCENTS[idx % PLAYER_ACCENTS.length];
   };
-  const standings = computeStandings(season);
+  const standings = computePointStandings(statSeason);
   const recordOf = Object.fromEntries(standings.map(s => [s.playerId, s]));
 
   const resolveLayers = (deckName: string | null) => {
@@ -132,9 +139,11 @@ export default function RoundRobinSessionTabs({ season, deckImages, deckImageLib
               <div style={{ fontSize: '0.75rem', fontWeight: 700, color: accent, marginBottom: '6px', wordBreak: 'break-word' }}>
                 {p.name}
               </div>
-              <div style={{ fontSize: '1.5rem', fontWeight: 900, color: '#fff', textShadow: `0 0 18px ${accent}` }}>
-                {rec?.wins ?? 0}<span style={{ fontSize: '0.8125rem', margin: '0 6px 0 2px', fontWeight: 600, color: accent }}>勝</span>
-                {rec?.losses ?? 0}<span style={{ fontSize: '0.8125rem', marginLeft: '2px', fontWeight: 600, color: 'rgba(148,163,184,0.9)' }}>敗</span>
+              <div style={{ fontSize: '1.75rem', fontWeight: 900, color: '#fff', textShadow: `0 0 18px ${accent}`, lineHeight: 1.1 }}>
+                {rec?.points ?? 0}<span style={{ fontSize: '0.8125rem', marginLeft: '3px', fontWeight: 600, color: accent }}>点</span>
+              </div>
+              <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'rgba(148,163,184,0.9)', marginTop: '4px' }}>
+                {rec?.wins ?? 0}勝{rec?.losses ?? 0}敗
               </div>
             </div>
           );
@@ -323,6 +332,7 @@ export default function RoundRobinSessionTabs({ season, deckImages, deckImageLib
                                 }}
                               >
                                 {playerMap[match.winnerId]}
+                                {matchPoints(match) > 0 && <span style={{ marginLeft: '3px' }}>+{matchPoints(match)}</span>}
                               </span>
                             ) : (
                               <span style={{ color: 'rgba(148,163,184,0.4)' }}>—</span>
@@ -338,6 +348,11 @@ export default function RoundRobinSessionTabs({ season, deckImages, deckImageLib
           </div>
         );
       })}
+
+      {/* 勝ち点ルール */}
+      <div style={{ padding: '10px 16px', background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(8px)', borderRadius: '8px', fontSize: '0.8125rem', color: 'rgba(148,163,184,0.9)', border: '1px solid rgba(255,255,255,0.08)' }}>
+        <strong style={{ color: 'rgba(203,213,225,0.9)' }}>勝ち点ルール:</strong> 先攻で勝利 → 1点 ／ 後攻で勝利 → 2点（結果が確定した試合のみ集計）
+      </div>
     </div>
   );
 }

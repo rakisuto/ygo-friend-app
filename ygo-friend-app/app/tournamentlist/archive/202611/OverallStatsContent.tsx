@@ -1,7 +1,8 @@
 'use client';
 
 import type { Season } from '@/app/tournament/types';
-import { computeStandings, computeDeckUsage } from '@/lib/tournament/stats';
+import { computeDeckUsage } from '@/lib/tournament/stats';
+import { computePointStandings } from '@/lib/tournament/points';
 
 const RANK_BADGE: Record<number, { label: string; glow: string }> = {
   1: { label: '🥇', glow: '#fbbf24' },
@@ -33,7 +34,8 @@ const rateColor = (r: number) => (r >= 60 ? '#4ade80' : r >= 40 ? '#fbbf24' : '#
 interface Props { season: Season }
 
 export default function OverallStatsContent({ season }: Props) {
-  const standings = computeStandings(season);
+  // 勝ち点順の順位表。season は確定済みの試合だけに絞ったものが渡される
+  const standings = computePointStandings(season);
   const played = standings.some(s => s.wins + s.losses > 0);
 
   if (!played) {
@@ -70,6 +72,7 @@ export default function OverallStatsContent({ season }: Props) {
         <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span style={{ fontSize: '1rem' }}>🏆</span>
           <h2 style={{ fontSize: '0.9375rem', fontWeight: 700, color: '#f1f5f9', margin: 0, letterSpacing: '0.02em' }}>順位表</h2>
+          <span style={{ fontSize: '0.6875rem', color: 'rgba(148,163,184,0.7)', marginLeft: '4px' }}>勝ち点順（先攻勝利+1／後攻勝利+2）</span>
         </div>
         <div className="table-scroll">
           <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.9375rem', minWidth: '320px' }} className="gothic">
@@ -77,6 +80,7 @@ export default function OverallStatsContent({ season }: Props) {
               <tr style={{ background: 'rgba(255,255,255,0.04)' }}>
                 <th style={{ ...thStyle, textAlign: 'center', width: '56px' }}>順位</th>
                 <th style={{ ...thStyle, textAlign: 'left' }}>プレイヤー</th>
+                <th style={{ ...thStyle, textAlign: 'center', color: '#fde68a', width: '64px' }}>勝ち点</th>
                 <th style={{ ...thStyle, textAlign: 'center', color: '#4ade80', width: '48px' }}>勝</th>
                 <th style={{ ...thStyle, textAlign: 'center', color: '#f87171', width: '48px' }}>敗</th>
                 <th style={{ ...thStyle, textAlign: 'right', width: '72px' }}>勝率</th>
@@ -102,6 +106,7 @@ export default function OverallStatsContent({ season }: Props) {
                     <td style={{ padding: '12px', fontWeight: row.rank === 1 ? 800 : 500, color: row.rank === 1 ? '#fde68a' : 'rgba(226,232,240,0.95)', fontSize: '1rem' }}>
                       {row.playerName}
                     </td>
+                    <td style={{ padding: '10px', textAlign: 'center', fontWeight: 800, color: '#fde68a', fontSize: '1.25rem' }}>{row.points}</td>
                     <td style={{ padding: '10px', textAlign: 'center', fontWeight: 700, color: '#4ade80', fontSize: '1.125rem' }}>{row.wins}</td>
                     <td style={{ padding: '10px', textAlign: 'center', fontWeight: 700, color: '#f87171', fontSize: '1.125rem' }}>{row.losses}</td>
                     <td style={{ padding: '10px 12px', textAlign: 'right' }}>

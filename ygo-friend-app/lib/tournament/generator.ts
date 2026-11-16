@@ -87,6 +87,7 @@ function makeCoinTossMatches(players: Player[]): Match[] {
         secondPlayerDeck: null,
         winnerId: null,
         firstUndecided: true,
+        confirmed: false,
       });
     }
   }

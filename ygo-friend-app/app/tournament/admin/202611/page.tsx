@@ -270,8 +270,9 @@ export default function AdminPage() {
 
   const handleSessionSave = async (sessionId: string, matches: Match[]) => {
     const res = await adminFetch(`/api/tournament/202611/session/${sessionId}`, { method: 'PATCH', body: JSON.stringify({ matches }) });
-    if (res.status === 401) { handleUnauthorized(); return; }
-    if (!res.ok) return;
+    // 失敗は呼び出し元(試合表)に伝える。確定やアナウンスが「保存できていないのに成功」にならないようにする
+    if (res.status === 401) { handleUnauthorized(); throw new Error('PINが正しくありません'); }
+    if (!res.ok) throw new Error('保存に失敗しました');
     setSeason(prev => prev ? { ...prev, sessions: prev.sessions.map(s => s.id === sessionId ? { ...s, matches } : s) } : prev);
   };
 

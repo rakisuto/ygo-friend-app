@@ -4,12 +4,19 @@ import { useState, useEffect } from 'react';
 import type { Match, Player, Session, DeckImageMap, DeckImageLibrary, DeckImageLayer } from '../types';
 import DeckImageFrame from './DeckImageFrame';
 import DeckImagePicker from './DeckImagePicker';
+import { isConfirmed } from '@/lib/tournament/points';
+import { matchIssues } from '@/lib/tournament/readiness';
 
 interface Props {
   session: Session;
   players: Player[];
   isAdmin?: boolean;
-  /** 管理画面で先攻をコイントスの結果に応じて試合ごとに選べるようにする(先攻未定にも戻せる)。 */
+  /**
+   * 11月大会の運用モード(管理画面)。
+   * - 先攻をコイントスの結果に応じて試合ごとに切り替えられる(先攻未定にも戻せる)
+   * - 試合ごとに「確定」できる。確定した試合だけ公開ページの順位・勝ち点・成績に反映される。確定中は編集不可。
+   *   確定・アナウンスには条件がある(先攻/後攻が決定・両デッキ名・両デッキ画像・勝者)。
+   */
   firstSelectable?: boolean;
   onSave?: (matches: Match[]) => Promise<void>;
   /**
@@ -59,7 +66,12 @@ export default function MatchTable({ session, players, isAdmin, firstSelectable,
 
   const update = (index: number, field: keyof Match, value: string | null) => {
     setEdited(prev =>
-      prev.map((m, i) => (i === index ? { ...m, [field]: value || null } : m))
+      prev.map((m, i) => (
+        i === index
+          // 勝者を変えたら、確定は解除する(確定するまで公開ページには反映されない)
+          ? { ...m, [field]: value || null, ...(field === 'winnerId' && firstSelectable ? { confirmed: false } : {}) }
+          : m
+      ))
     );
     if (toastState === 'saved') setToastState('idle');
   };
@@ -86,7 +98,38 @@ export default function MatchTable({ session, players, isAdmin, firstSelectable,
     if (toastState === 'saved') setToastState('idle');
   };
 
-  // 結果を保存してから Discord に投稿する。押し間違い・二重投稿を防ぐため、必ず確認を挟む。
+  // 確定 ⇔ 未確定の切り替え。確定する前に条件をチェックし、「データ反映しますか？」と確認してから保存する。
+  const [confirmingNo, setConfirmingNo] = useState<number | null>(null);
+  const toggleConfirm = async (index: number) => {
+    if (!onSave) return;
+    const target = edited[index];
+    const no = target.matchNumber;
+    const toConfirm = !isConfirmed(target);
+    if (toConfirm) {
+      const issues = matchIssues(target, deckImages ?? {}, deckImageLibrary ?? []);
+      if (issues.length > 0) return; // ボタンは無効になっているが、念のため
+    }
+    const ok = window.confirm(
+      toConfirm
+        ? `${no}戦目を確定して、データを反映しますか？\n（公開ページの順位・勝ち点・成績に反映されます）`
+        : `${no}戦目を未確定に戻して、データを反映しますか？\n（公開ページの順位・勝ち点・成績から外れます）`
+    );
+    if (!ok) return;
+    const next = edited.map((m, i) => (i === index ? { ...m, confirmed: toConfirm } : m));
+    setConfirmingNo(no);
+    setToastState('saving');
+    try {
+      await onSave(next);
+      setEdited(next);
+      setToastState('saved');
+    } catch {
+      setToastState('error');
+    } finally {
+      setConfirmingNo(null);
+    }
+  };
+
+  // 結果を確定・保存してから Discord に投稿する。押し間違い・二重投稿を防ぐため、必ず確認を挟む。
   const handleAnnounce = async (matchNumber: number, kind: 'start' | 'result') => {
     if (!onAnnounce) return;
     const key = `${kind}-${matchNumber}`;
@@ -95,12 +138,19 @@ export default function MatchTable({ session, players, isAdmin, firstSelectable,
     const ok = window.confirm(
       already
         ? `${label}は投稿済みです。もう一度 Discord に投稿しますか？`
-        : `結果を保存して、${label}を Discord に投稿しますか？`
+        : kind === 'result'
+        ? `${label}を確定して保存し、Discord に投稿しますか？`
+        : `保存して、${label}を Discord に投稿しますか？`
     );
     if (!ok) return;
+    // 結果のアナウンスは、その試合を確定してから投稿する(順位・勝ち点に反映させるため)
+    const next = kind === 'result'
+      ? edited.map(m => (m.matchNumber === matchNumber ? { ...m, confirmed: true } : m))
+      : edited;
     setAnnounceStatus(prev => ({ ...prev, [key]: { state: 'sending' } }));
     try {
-      await onAnnounce(edited, matchNumber, kind);
+      await onAnnounce(next, matchNumber, kind);
+      if (kind === 'result') setEdited(next);
       setAnnounceStatus(prev => ({ ...prev, [key]: { state: 'done' } }));
       setToastState('idle');
     } catch (e) {
@@ -127,15 +177,17 @@ export default function MatchTable({ session, players, isAdmin, firstSelectable,
   const swapAtFront = !!firstSelectable;
   const renderSwapCell = (match: Match, i: number) => {
     const undecided = !!firstSelectable && !!match.firstUndecided;
+    const locked = !!firstSelectable && isConfirmed(match); // 確定中は編集不可
     return (
       <td style={{ padding: '6px 8px', textAlign: 'center', borderRight: '1px solid #f1f5f9' }}>
         <button
           type="button"
           onClick={() => swapSides(i)}
-          title={undecided ? '先攻・後攻を入れ替えて決定' : '先攻・後攻を入れ替え'}
+          disabled={locked}
+          title={locked ? '確定中は変更できません（未確定に戻すと編集できます）' : undecided ? '先攻・後攻を入れ替えて決定' : '先攻・後攻を入れ替え'}
           style={{
             border: '1px solid #e2e8f0', borderRadius: '6px',
-            background: '#fff', cursor: 'pointer',
+            background: '#fff', cursor: locked ? 'default' : 'pointer', opacity: locked ? 0.5 : 1,
             padding: '4px 8px', fontSize: firstSelectable ? '1.0625rem' : '0.875rem', lineHeight: 1.2, color: '#64748b',
           }}
         >
@@ -148,10 +200,12 @@ export default function MatchTable({ session, players, isAdmin, firstSelectable,
             <button
               type="button"
               onClick={() => resetFirst(i)}
+              disabled={locked}
               title="先攻を未定に戻す"
               style={{
                 display: 'block', margin: '3px auto 0', border: 'none', background: 'none',
-                cursor: 'pointer', fontSize: '0.6875rem', color: '#94a3b8', textDecoration: 'underline',
+                cursor: locked ? 'default' : 'pointer', opacity: locked ? 0.4 : 1,
+                fontSize: '0.6875rem', color: '#94a3b8', textDecoration: 'underline',
                 whiteSpace: 'nowrap',
               }}
             >
@@ -228,7 +282,7 @@ export default function MatchTable({ session, players, isAdmin, firstSelectable,
               <th style={{ ...COL.firstDeckH, minWidth: '130px' }}>先攻デッキ</th>
               <th style={COL.secondHeader}>後攻</th>
               <th style={{ ...COL.secondDeckH, minWidth: '130px' }}>後攻デッキ</th>
-              <th style={{ ...COL.winnerHeader, minWidth: '120px' }}>勝者</th>
+              <th style={{ ...COL.winnerHeader, minWidth: firstSelectable ? '150px' : '120px' }}>勝者</th>
               {isAdmin && !swapAtFront && <th style={{ ...COL.numHeader, width: '48px' }}>入替</th>}
             </tr>
           </thead>
@@ -236,9 +290,13 @@ export default function MatchTable({ session, players, isAdmin, firstSelectable,
             {edited.map((match, i) => {
               const firstWon = match.winnerId === match.firstPlayerId;
               const secondWon = match.winnerId === match.secondPlayerId;
-              const rowBg = firstWon || secondWon ? '#fefce8' : i % 2 === 0 ? '#ffffff' : '#f8fafc';
+              // 確定済み(11月大会): 緑の背景。確定中は編集不可
+              const locked = !!firstSelectable && isConfirmed(match);
+              const rowBg = locked ? '#f0fdf4' : firstWon || secondWon ? '#fefce8' : i % 2 === 0 ? '#ffffff' : '#f8fafc';
               // 先攻未定(コイントス前): 名前は表示するが、先攻/後攻の並びは仮なのでグレーにする
               const undecided = !!firstSelectable && !!match.firstUndecided;
+              // 確定・アナウンスできない理由(空なら可)
+              const issues = firstSelectable ? matchIssues(match, deckImages ?? {}, deckImageLibrary ?? []) : [];
               return (
                 <tr key={match.matchNumber} style={{ background: rowBg, borderTop: '1px solid #f1f5f9' }}>
                   <td style={{ padding: '8px', textAlign: 'center', color: '#94a3b8', fontFamily: 'monospace', borderRight: '1px solid #f1f5f9', whiteSpace: 'nowrap' }}>
@@ -278,6 +336,7 @@ export default function MatchTable({ session, players, isAdmin, firstSelectable,
                           style={{ flex: 1, minWidth: 0, border: '1px solid #e2e8f0', borderRadius: '4px', padding: '4px 6px', fontSize: '0.875rem', background: '#fff', color: '#1e293b' }}
                           value={match.firstPlayerDeck ?? ''}
                           onChange={e => update(i, 'firstPlayerDeck', e.target.value)}
+                          disabled={locked}
                           placeholder="デッキテーマ"
                           autoComplete="off"
                         />
@@ -334,6 +393,7 @@ export default function MatchTable({ session, players, isAdmin, firstSelectable,
                           style={{ flex: 1, minWidth: 0, border: '1px solid #e2e8f0', borderRadius: '4px', padding: '4px 6px', fontSize: '0.875rem', background: '#fff', color: '#1e293b' }}
                           value={match.secondPlayerDeck ?? ''}
                           onChange={e => update(i, 'secondPlayerDeck', e.target.value)}
+                          disabled={locked}
                           placeholder="デッキテーマ"
                           autoComplete="off"
                         />
@@ -371,27 +431,50 @@ export default function MatchTable({ session, players, isAdmin, firstSelectable,
                         }}
                         value={match.winnerId ?? ''}
                         onChange={e => update(i, 'winnerId', e.target.value)}
+                        disabled={locked}
                       >
                         <option value="">未定</option>
                         <option value={match.firstPlayerId}>{playerMap[match.firstPlayerId]}</option>
                         <option value={match.secondPlayerId}>{playerMap[match.secondPlayerId]}</option>
                       </select>
+                      {firstSelectable && onSave && (
+                        // 確定 ⇔ 未確定。確定できるのは条件(先攻/後攻・デッキ名・デッキ画像・勝者)を満たす試合だけ。
+                        // 未確定に戻すのは、条件に関係なくいつでも可能
+                        <div style={{ marginTop: '5px' }}>
+                          <button
+                            type="button"
+                            onClick={() => toggleConfirm(i)}
+                            disabled={confirmingNo !== null || (!locked && issues.length > 0)}
+                            title={locked ? '未確定に戻す' : issues.length > 0 ? `確定できません: ${issues.join('・')}` : '確定して、データを反映'}
+                            style={{
+                              width: '100%', padding: '4px 8px', fontSize: '0.8125rem', fontWeight: 700,
+                              background: locked ? '#dcfce7' : issues.length > 0 ? '#f1f5f9' : '#16a34a',
+                              color: locked ? '#166534' : issues.length > 0 ? '#94a3b8' : '#fff',
+                              border: `1px solid ${locked ? '#86efac' : issues.length > 0 ? '#e2e8f0' : '#15803d'}`,
+                              borderRadius: '6px', whiteSpace: 'nowrap',
+                              cursor: confirmingNo !== null || (!locked && issues.length > 0) ? 'default' : 'pointer',
+                            }}
+                          >
+                            {locked ? '✅ 確定済み（解除）' : '確定する'}
+                          </button>
+                        </div>
+                      )}
                       {onAnnounce && (() => {
                         const st = announceStatus[`result-${match.matchNumber}`];
-                        const noWinner = !match.winnerId;
+                        const blocked = issues.length > 0; // 確定と同じ条件を満たさないとアナウンスできない
                         const sending = st?.state === 'sending';
                         return (
                           <div style={{ marginTop: '5px' }}>
                             <button
                               type="button"
                               onClick={() => handleAnnounce(match.matchNumber, 'result')}
-                              disabled={noWinner || sending}
-                              title={noWinner ? '勝者を選択するとアナウンスできます' : '結果を保存して Discord に投稿'}
+                              disabled={blocked || sending}
+                              title={blocked ? `アナウンスできません: ${issues.join('・')}` : '確定して保存し、Discord に投稿'}
                               style={{
                                 width: '100%', padding: '4px 8px', fontSize: '0.8125rem', fontWeight: 600,
-                                background: noWinner ? '#f1f5f9' : '#eef2ff', color: noWinner ? '#94a3b8' : '#4338ca',
-                                border: `1px solid ${noWinner ? '#e2e8f0' : '#c7d2fe'}`, borderRadius: '6px',
-                                cursor: noWinner || sending ? 'default' : 'pointer', whiteSpace: 'nowrap',
+                                background: blocked ? '#f1f5f9' : '#eef2ff', color: blocked ? '#94a3b8' : '#4338ca',
+                                border: `1px solid ${blocked ? '#e2e8f0' : '#c7d2fe'}`, borderRadius: '6px',
+                                cursor: blocked || sending ? 'default' : 'pointer', whiteSpace: 'nowrap',
                               }}
                             >
                               📢 アナウンス
@@ -402,6 +485,11 @@ export default function MatchTable({ session, players, isAdmin, firstSelectable,
                           </div>
                         );
                       })()}
+                      {firstSelectable && !locked && issues.length > 0 && (
+                        <div style={{ marginTop: '5px', fontSize: '0.6875rem', color: '#b45309', textAlign: 'left', lineHeight: 1.4, whiteSpace: 'normal' }}>
+                          ⚠ {issues.join('・')}
+                        </div>
+                      )}
                       </>
                     ) : match.winnerId ? (
                       <span style={{ fontWeight: 700, color: '#d97706' }}>{playerMap[match.winnerId]}</span>

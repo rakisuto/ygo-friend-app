@@ -6,6 +6,7 @@ import DescriptionTabContent from '../202607/DescriptionTabContent';
 import RoundRobinSessionTabs from './RoundRobinSessionTabs';
 import PlayerStatsContent from './PlayerStatsContent';
 import OverallStatsContent from './OverallStatsContent';
+import { confirmedSeason, maskUnconfirmed } from '@/lib/tournament/points';
 
 type Tab = 'description' | 'result' | 'player' | 'overall';
 
@@ -26,6 +27,11 @@ interface Props {
 export default function ArchiveTabs({ season, activeTab, deckImages, deckImageLibrary }: Props) {
   const router = useRouter();
   const pathname = usePathname();
+
+  // 確定した試合だけを順位・勝ち点・成績に反映する。
+  // 試合表には未確定の試合の対戦カードも出すが、勝者は確定するまで未定として表示する。
+  const viewSeason = maskUnconfirmed(season);
+  const statSeason = confirmedSeason(season);
 
   const handleTabChange = (tab: Tab) => {
     router.push(`${pathname}?tab=${tab}`);
@@ -75,9 +81,9 @@ export default function ArchiveTabs({ season, activeTab, deckImages, deckImageLi
 
       {/* タブコンテンツ */}
       {activeTab === 'description' && <DescriptionTabContent description={season.description} />}
-      {activeTab === 'result' && <RoundRobinSessionTabs season={season} deckImages={deckImages} deckImageLibrary={deckImageLibrary} />}
-      {activeTab === 'player' && <PlayerStatsContent season={season} />}
-      {activeTab === 'overall' && <OverallStatsContent season={season} />}
+      {activeTab === 'result' && <RoundRobinSessionTabs season={viewSeason} statSeason={statSeason} deckImages={deckImages} deckImageLibrary={deckImageLibrary} />}
+      {activeTab === 'player' && <PlayerStatsContent season={statSeason} />}
+      {activeTab === 'overall' && <OverallStatsContent season={statSeason} />}
     </div>
   );
 }

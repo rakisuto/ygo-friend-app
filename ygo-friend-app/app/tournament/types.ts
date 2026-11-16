@@ -20,6 +20,12 @@ export interface Match {
   winnerId: string | null;
   /** true の間は先攻/後攻が未決定(当日のコイントスで管理画面から決める)。未指定は決定済み扱い。 */
   firstUndecided?: boolean;
+  /**
+   * 結果の確定。確定した試合だけが公開ページの順位・勝ち点・成績に反映される(11月大会〜)。
+   * 未指定は、勝者が入っていれば確定済み(確定機能の導入前に入力した結果をそのまま公開するため)。
+   * 勝者を変更すると false になる。
+   */
+  confirmed?: boolean;
 }
 
 export interface Session {

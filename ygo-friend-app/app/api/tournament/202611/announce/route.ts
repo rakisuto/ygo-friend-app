@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { kv } from '@/lib/kv';
 import { postToDiscord } from '@/lib/discord';
 import { buildAnnouncement, type AnnounceKind } from '@/lib/tournament/announce';
-import type { Season } from '@/app/tournament/types';
+import type { Season, DeckImageMap, DeckImageLibrary } from '@/app/tournament/types';
 
 const KEY = 'tournament:season:202611';
 
@@ -32,7 +32,11 @@ export async function POST(req: NextRequest) {
     const season = await kv.get<Season>(KEY);
     if (!season) return NextResponse.json({ error: '大会データが見つかりません' }, { status: 404 });
 
-    const built = buildAnnouncement(season, sessionId, matchNumber, kind as AnnounceKind);
+    // 確定の条件(デッキ画像の設定)の判定に、7月大会と共有しているデッキ画像のデータを使う
+    const deckImages = (await kv.get<DeckImageMap>('tournament:202607:deckImages')) ?? {};
+    const deckImageLibrary = (await kv.get<DeckImageLibrary>('tournament:202607:deckImageLibrary')) ?? [];
+
+    const built = buildAnnouncement(season, sessionId, matchNumber, kind as AnnounceKind, { deckImages, deckImageLibrary });
     if (!built.ok) return NextResponse.json({ error: built.error }, { status: 400 });
 
     const posted = await postToDiscord(built.content);

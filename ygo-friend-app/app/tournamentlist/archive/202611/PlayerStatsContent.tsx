@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { Season } from '@/app/tournament/types';
 import { computePlayerStats } from '@/lib/tournament/stats';
 import type { DeckMatchupEntry } from '@/lib/tournament/stats';
+import { playerPoints } from '@/lib/tournament/points';
 
 const RANK_MEDAL: Record<string, string> = { '1': '🥇', '2': '🥈', '3': '🥉' };
 
@@ -206,6 +207,10 @@ export default function PlayerStatsContent({ season }: Props) {
                   wins={stats.secondStats.wins} losses={stats.secondStats.losses}
                   winRate={stats.secondStats.total > 0 ? Math.round(stats.secondStats.wins / stats.secondStats.total * 1000) / 10 : 0}
                 />
+              </div>
+              <div>
+                <span style={{ fontSize: '0.75rem', color: 'rgba(148,163,184,0.7)', display: 'block', marginBottom: '3px' }}>獲得勝ち点</span>
+                <span style={{ fontWeight: 800, color: '#fde68a', fontSize: '1.125rem' }}>{playerPoints(season, selectedId)}点</span>
               </div>
               <div>
                 <span style={{ fontSize: '0.75rem', color: 'rgba(148,163,184,0.7)', display: 'block', marginBottom: '3px' }}>最大連勝</span>
